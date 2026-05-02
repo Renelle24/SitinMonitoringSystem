@@ -1,0 +1,9 @@
+<a href="{{ url_for('admin_dashboard') }}" class="{{ 'active' if request.endpoint == 'admin_dashboard' }}">Home</a>
+<a href="{{ url_for('search_student') }}" class="{{ 'active' if request.endpoint == 'search_student' }}">Search</a>
+<a href="{{ url_for('student_list') }}" class="{{ 'active' if request.endpoint in ['student_list','add_student','edit_student'] }}">Students</a>
+<a href="{{ url_for('sitin_form') }}" class="{{ 'active' if request.endpoint == 'sitin_form' }}">Sit-in</a>
+<a href="{{ url_for('current_sitin') }}" class="{{ 'active' if request.endpoint == 'current_sitin' }}">View Sit-in Records</a>
+<a href="{{ url_for('sitin_reports') }}" class="{{ 'active' if request.endpoint == 'sitin_reports' }}">Sit-in Reports</a>
+<a href="{{ url_for('feedback_reports') }}" class="{{ 'active' if request.endpoint == 'feedback_reports' }}">Feedback Reports</a>
+<a href="{{ url_for('reservation') }}" class="{{ 'active' if request.endpoint == 'reservation' }}">Reservation</a>
+<a href="{{ url_for('logout') }}" class="btn-logout">Log out</a>

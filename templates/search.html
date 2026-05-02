@@ -1,0 +1,288 @@
+{% extends "base.html" %}
+{% block title %}Search Student{% endblock %}
+{% block nav_brand %}College of Computer Studies Admin{% endblock %}
+{% block nav_links %}{% include "admin_nav.html" %}{% endblock %}
+
+{% block extra_head %}
+<style>
+  .search-page {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #1a237e 0%, #1565c0 50%, #0288d1 100%);
+    padding: 2rem;
+    margin: -1.5rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .search-page::before {
+    content: '';
+    position: absolute;
+    width: 450px; height: 450px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.05);
+    top: -150px; right: -100px;
+    pointer-events: none;
+  }
+
+  .search-page::after {
+    content: '';
+    position: absolute;
+    width: 300px; height: 300px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.05);
+    bottom: -80px; left: -60px;
+    pointer-events: none;
+  }
+
+  .search-wrapper {
+    max-width: 640px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+  }
+
+  .page-header {
+    margin-bottom: 1.5rem;
+  }
+
+  .page-header h1 {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 2rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin: 0;
+  }
+
+  .page-header p {
+    color: rgba(255,255,255,0.7);
+    font-size: 0.875rem;
+    margin: 0.25rem 0 0;
+  }
+
+  /* Search bar card */
+  .search-card {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 1.75rem;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+    margin-bottom: 1.25rem;
+  }
+
+  .search-bar {
+    display: flex;
+    gap: 0.6rem;
+  }
+
+  .search-input {
+    flex: 1;
+    padding: 0.7rem 1rem;
+    border: 1.5px solid #dde3f8;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    color: #1a237e;
+    background: #f8faff;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    outline: none;
+  }
+
+  .search-input:focus {
+    border-color: #1565c0;
+    box-shadow: 0 0 0 3px rgba(21,101,192,0.12);
+    background: #fff;
+  }
+
+  .btn-search {
+    background: linear-gradient(135deg, #1565c0, #1976d2);
+    color: #ffffff;
+    border: none;
+    border-radius: 10px;
+    padding: 0.7rem 1.4rem;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(21,101,192,0.3);
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+
+  .btn-search:hover {
+    background: linear-gradient(135deg, #0d47a1, #1565c0);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(21,101,192,0.4);
+  }
+
+  /* Results */
+  .results-header {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.7);
+    margin-bottom: 0.75rem;
+  }
+
+  .result-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .result-card {
+    background: #ffffff;
+    border-radius: 14px;
+    padding: 1rem 1.25rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+
+  .result-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+  }
+
+  .result-info {}
+
+  .result-name {
+    font-weight: 700;
+    color: #1a237e;
+    font-size: 1rem;
+    margin-bottom: 0.2rem;
+  }
+
+  .result-meta {
+    font-size: 0.8rem;
+    color: #78909c;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+  }
+
+  .meta-chip {
+    background: #f0f4ff;
+    color: #1565c0;
+    border-radius: 6px;
+    padding: 0.15rem 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
+  .meta-chip.session {
+    background: #e8f5e9;
+    color: #2e7d32;
+  }
+
+  .meta-chip.session.low {
+    background: #fff3e0;
+    color: #e65100;
+  }
+
+  .meta-chip.session.empty {
+    background: #ffebee;
+    color: #c62828;
+  }
+
+  .btn-sitin {
+    background: linear-gradient(135deg, #f9c600, #f5a800);
+    color: #1a237e;
+    border: none;
+    border-radius: 8px;
+    padding: 0.5rem 1.1rem;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 700;
+    cursor: pointer;
+    text-decoration: none;
+    white-space: nowrap;
+    box-shadow: 0 2px 8px rgba(249,198,0,0.35);
+    transition: all 0.2s;
+    display: inline-block;
+  }
+
+  .btn-sitin:hover {
+    background: linear-gradient(135deg, #ffd700, #f9c600);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(249,198,0,0.45);
+  }
+
+  .no-results {
+    background: #ffffff;
+    border-radius: 14px;
+    padding: 2.5rem;
+    text-align: center;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+    color: #90a4ae;
+    font-size: 0.9rem;
+  }
+
+  .no-results .icon { font-size: 2.5rem; margin-bottom: 0.5rem; }
+  .no-results strong { display: block; color: #546e7a; font-size: 1rem; margin-bottom: 0.25rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="search-page">
+  <div class="search-wrapper">
+
+    <div class="page-header">
+      <h1>🔍 Search Student</h1>
+      <p>Find a student by ID number or name to initiate a sit-in</p>
+    </div>
+
+    <div class="search-card">
+      <form method="GET" action="{{ url_for('search_student') }}" style="margin:0;">
+        <div class="search-bar">
+          <input
+            type="text"
+            name="q"
+            value="{{ query }}"
+            class="search-input"
+            placeholder="Search by ID number or student name..."
+            autofocus>
+          <button type="submit" class="btn-search">🔍 Search</button>
+        </div>
+      </form>
+    </div>
+
+    {% if query %}
+      {% if results %}
+        <div class="results-header">{{ results|length }} result{{ 's' if results|length != 1 }} found for "{{ query }}"</div>
+        <div class="result-list">
+          {% for s in results %}
+          <div class="result-card">
+            <div class="result-info">
+              <div class="result-name">{{ s.first }} {{ s.last }}</div>
+              <div class="result-meta">
+                <span class="meta-chip">ID: {{ s.id }}</span>
+                <span class="meta-chip">{{ s.course }}</span>
+                <span class="meta-chip">Year {{ s.year }}</span>
+                <span class="meta-chip session {% if s.session == 0 %}empty{% elif s.session <= 5 %}low{% endif %}">
+                  {{ s.session }} sessions left
+                </span>
+              </div>
+            </div>
+            <a href="{{ url_for('sitin_form') }}?id={{ s.id }}" class="btn-sitin">
+              🖥️ Sit In
+            </a>
+          </div>
+          {% endfor %}
+        </div>
+
+      {% else %}
+        <div class="no-results">
+          <div class="icon">😕</div>
+          <strong>No students found</strong>
+          No results matched "{{ query }}" — try a different ID or name.
+        </div>
+      {% endif %}
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}

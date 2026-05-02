@@ -1,0 +1,279 @@
+{% extends "base.html" %}
+{% block title %}Current Sit-in{% endblock %}
+{% block nav_brand %}College of Computer Studies Admin{% endblock %}
+{% block nav_links %}{% include "admin_nav.html" %}{% endblock %}
+
+{% block extra_head %}
+<style>
+  .sitin-page {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #1a237e 0%, #1565c0 50%, #0288d1 100%);
+    padding: 2rem;
+    margin: -1.5rem;
+  }
+
+  .sitin-wrapper {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .page-header {
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .page-header-text h1 {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 2rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin: 0;
+  }
+
+  .page-header-text p {
+    color: rgba(255,255,255,0.7);
+    font-size: 0.875rem;
+    margin: 0.25rem 0 0;
+  }
+
+  .btn-new {
+    background: linear-gradient(135deg, #f9c600, #f5a800);
+    color: #1a237e;
+    border: none;
+    border-radius: 9px;
+    padding: 0.6rem 1.4rem;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    box-shadow: 0 4px 12px rgba(249,198,0,0.4);
+    transition: all 0.2s;
+  }
+
+  .btn-new:hover {
+    background: linear-gradient(135deg, #ffd700, #f9c600);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(249,198,0,0.5);
+  }
+
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .stat-card {
+    background: rgba(255,255,255,0.12);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 12px;
+    padding: 1rem 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+  }
+
+  .stat-icon { font-size: 1.75rem; flex-shrink: 0; }
+
+  .stat-info .num {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: #f9c600;
+    line-height: 1;
+  }
+
+  .stat-info .lbl {
+    color: rgba(255,255,255,0.75);
+    font-size: 0.78rem;
+    margin-top: 0.1rem;
+  }
+
+  .table-card {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 1.75rem;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+  }
+
+  table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+
+  thead tr {
+    background: linear-gradient(135deg, #1a237e, #1565c0);
+    color: white;
+  }
+
+  thead th {
+    padding: 0.85rem 0.9rem;
+    text-align: left;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+  }
+
+  thead th:first-child { border-radius: 10px 0 0 10px; }
+  thead th:last-child  { border-radius: 0 10px 10px 0; }
+
+  tbody tr { border-bottom: 1px solid #f0f4ff; transition: background 0.15s; }
+  tbody tr:hover { background: #f5f8ff; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody td { padding: 0.85rem 0.9rem; color: #2d3a5a; vertical-align: middle; }
+
+  .sit-id {
+    font-family: monospace;
+    background: #e8edf8;
+    color: #1a237e;
+    font-weight: 700;
+    padding: 0.2rem 0.5rem;
+    border-radius: 5px;
+    font-size: 0.8rem;
+  }
+
+  .student-name { font-weight: 700; color: #1a237e; }
+  .student-id   { font-size: 0.78rem; color: #78909c; }
+
+  .lab-badge {
+    background: #e3f2fd;
+    color: #1565c0;
+    font-weight: 700;
+    font-size: 0.78rem;
+    padding: 0.2rem 0.55rem;
+    border-radius: 6px;
+  }
+
+  .badge-active {
+    background: #e3f2fd;
+    color: #1565c0;
+    font-weight: 700;
+    font-size: 0.75rem;
+    padding: 0.25rem 0.65rem;
+    border-radius: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+
+  .btn-checkout {
+    background: linear-gradient(135deg, #e53935, #c62828);
+    color: #ffffff;
+    border: none;
+    border-radius: 7px;
+    padding: 0.4rem 0.85rem;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(229,57,53,0.3);
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+
+  .btn-checkout:hover {
+    background: linear-gradient(135deg, #c62828, #b71c1c);
+    transform: translateY(-1px);
+  }
+
+  .no-data { text-align: center; color: #90a4ae; padding: 3rem; font-style: italic; font-size: 0.9rem; }
+  .footer-info { font-size: 0.8rem; color: #90a4ae; margin-top: 1rem; }
+
+  @media (max-width: 768px) {
+    .stats-row { grid-template-columns: 1fr; }
+    .sitin-page { padding: 1rem; margin: -1rem; }
+    table { font-size: 0.8rem; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="sitin-page">
+  <div class="sitin-wrapper">
+
+    <div class="page-header">
+      <div class="page-header-text">
+        <h1>🖥️ Current Sit-in</h1>
+        <p>Students currently active in the lab</p>
+      </div>
+      <a href="{{ url_for('sitin_form') }}" class="btn-new">＋ New Sit-in</a>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-icon">👥</div>
+        <div class="stat-info">
+          <div class="num">{{ records|length }}</div>
+          <div class="lbl">Currently Active</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">🏫</div>
+        <div class="stat-info">
+          <div class="num">{{ records | map(attribute='lab') | list | unique | list | length }}</div>
+          <div class="lbl">Labs In Use</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">⏱️</div>
+        <div class="stat-info">
+          <div class="num">{{ records[0].date[:10] if records else '—' }}</div>
+          <div class="lbl">Latest Check-in Date</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="table-card">
+      <table>
+        <thead>
+          <tr>
+            <th>Sit ID</th>
+            <th>Student</th>
+            <th>Purpose</th>
+            <th>Lab</th>
+            <th>Session</th>
+            <th>Date & Time</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in records %}
+          <tr>
+            <td><span class="sit-id">{{ r.sit_id }}</span></td>
+            <td>
+              <div class="student-name">{{ r.name }}</div>
+              <div class="student-id">ID: {{ r.id }}</div>
+            </td>
+            <td>{{ r.purpose }}</td>
+            <td><span class="lab-badge">Room {{ r.lab }}</span></td>
+            <td style="text-align:center;">{{ r.session }}</td>
+            <td style="white-space:nowrap;font-size:0.82rem;">{{ r.date }}</td>
+            <td><span class="badge-active">● {{ r.status }}</span></td>
+            <td>
+              <form method="POST" action="{{ url_for('checkout', sit_id=r.sit_id) }}" style="margin:0;">
+                <button type="submit" class="btn-checkout"
+                  onclick="return confirm('Check out {{ r.name }}?')">
+                  Check Out
+                </button>
+              </form>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="8" class="no-data">No active sit-in sessions right now.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <div class="footer-info">Showing {{ records|length }} active session(s)</div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,303 @@
+{% extends "base.html" %}
+{% block title %}Login{% endblock %}
+{% block nav_links %}
+  <a href="#">Home</a>
+  <a href="#">Community ▾</a>
+  <a href="#">About</a>
+  <a href="{{ url_for('login') }}" class="active">Login</a>
+  <a href="{{ url_for('register') }}">Register</a>
+{% endblock %}
+
+{% block extra_head %}
+<style>
+  .login-page {
+    min-height: calc(100vh - 50px);
+    background: linear-gradient(135deg, #1a237e 0%, #1565c0 50%, #0288d1 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    margin: -1.5rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Decorative background circles */
+  .login-page::before {
+    content: '';
+    position: absolute;
+    width: 500px;
+    height: 500px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.05);
+    top: -150px;
+    left: -100px;
+    pointer-events: none;
+  }
+
+  .login-page::after {
+    content: '';
+    position: absolute;
+    width: 350px;
+    height: 350px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.05);
+    bottom: -100px;
+    right: -80px;
+    pointer-events: none;
+  }
+
+  .login-container {
+    display: flex;
+    align-items: center;
+    gap: 5rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Left logo section */
+  .logo-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.25rem;
+  }
+
+  .logo-section img {
+    width: 260px;
+    height: auto;
+    display: block;
+    filter: drop-shadow(0 4px 16px rgba(0,0,0,0.25));
+  }
+
+  .logo-tagline {
+    text-align: center;
+    color: rgba(255,255,255,0.85);
+    font-size: 0.9rem;
+    line-height: 1.5;
+    max-width: 220px;
+  }
+
+  .logo-tagline strong {
+    display: block;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1.2rem;
+    color: #f9c600;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.2rem;
+  }
+
+  /* Divider */
+  .login-divider {
+    width: 1.5px;
+    height: 260px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 2px;
+  }
+
+  /* Login card */
+  .login-card {
+    background: #ffffff;
+    border-radius: 20px;
+    padding: 2.5rem 2.75rem;
+    width: 380px;
+    box-shadow: 0 16px 48px rgba(0,0,0,0.22);
+  }
+
+  .login-card-header {
+    margin-bottom: 1.75rem;
+  }
+
+  .login-card-header h2 {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1.85rem;
+    font-weight: 700;
+    color: #1a237e;
+    margin: 0 0 0.2rem;
+  }
+
+  .login-card-header p {
+    color: #90a4ae;
+    font-size: 0.875rem;
+    margin: 0;
+  }
+
+  .form-label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #546e7a;
+    margin-bottom: 0.35rem;
+  }
+
+  .form-control {
+    width: 100%;
+    padding: 0.65rem 0.9rem;
+    border: 1.5px solid #dde3f8;
+    border-radius: 9px;
+    font-size: 0.875rem;
+    color: #1a237e;
+    background: #f8faff;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    box-sizing: border-box;
+  }
+
+  .form-control:focus {
+    outline: none;
+    border-color: #1565c0;
+    box-shadow: 0 0 0 3px rgba(21,101,192,0.12);
+    background: #fff;
+  }
+
+  .form-group {
+    margin-bottom: 1rem;
+  }
+
+  .form-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.4rem;
+  }
+
+  .checkbox-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .checkbox-group input {
+    accent-color: #1565c0;
+    width: 15px;
+    height: 15px;
+  }
+
+  .checkbox-group label {
+    font-size: 0.82rem;
+    color: #607d8b;
+    cursor: pointer;
+  }
+
+  .forgot-link {
+    font-size: 0.82rem;
+    color: #1565c0;
+    text-decoration: none;
+    font-weight: 600;
+  }
+
+  .forgot-link:hover { text-decoration: underline; }
+
+  /* Login button - yellow */
+  .btn-login {
+    width: 100%;
+    padding: 0.8rem;
+    background: linear-gradient(135deg, #f9c600, #f5a800);
+    color: #1a237e;
+    border: none;
+    border-radius: 10px;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    box-shadow: 0 4px 14px rgba(249,198,0,0.4);
+    transition: all 0.2s;
+  }
+
+  .btn-login:hover {
+    background: linear-gradient(135deg, #ffd700, #f9c600);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(249,198,0,0.5);
+  }
+
+  .btn-login:active { transform: translateY(0); }
+
+  .register-link {
+    text-align: center;
+    margin-top: 1.25rem;
+    font-size: 0.85rem;
+    color: #90a4ae;
+  }
+
+  .register-link a {
+    color: #1565c0;
+    font-weight: 700;
+    text-decoration: none;
+  }
+
+  .register-link a:hover { text-decoration: underline; }
+
+  /* Flash messages */
+  .alert {
+    padding: 0.65rem 0.9rem;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    margin-bottom: 1rem;
+  }
+  .alert-danger { background: #ffebee; color: #c62828; border: 1px solid #ffcdd2; }
+  .alert-success { background: #e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9; }
+
+  @media (max-width: 750px) {
+    .logo-section, .login-divider { display: none; }
+    .login-card { width: 100%; max-width: 400px; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="login-page">
+  <div class="login-container">
+
+    <!-- Logo Side -->
+    <div class="logo-section">
+      <img src="{{ url_for('static', filename='ccslogo.png') }}" alt="CCS Logo">
+      <div class="logo-tagline">
+        <strong>CCS Sit-in Monitor</strong>
+        Manage lab sessions efficiently for the College of Computer Studies
+      </div>
+    </div>
+
+    <div class="login-divider"></div>
+
+    <!-- Login Card -->
+    <div class="login-card">
+      <div class="login-card-header">
+        <h2>Welcome Back 👋</h2>
+        <p>Sign in to your CCS account</p>
+      </div>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }}">{{ message }}</div>
+        {% endfor %}
+      {% endwith %}
+
+      <form method="POST" action="{{ url_for('login') }}">
+        <div class="form-group">
+          <label class="form-label">ID Number</label>
+          <input type="text" name="id_number" class="form-control" placeholder="Enter your ID number" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input type="password" name="password" class="form-control" placeholder="Enter your password" required>
+        </div>
+        <div class="form-row">
+          <div class="checkbox-group">
+            <input type="checkbox" id="remember" name="remember">
+            <label for="remember">Remember me</label>
+          </div>
+          <a href="#" class="forgot-link">Forgot password?</a>
+        </div>
+        <button type="submit" class="btn-login">🔐 Login</button>
+      </form>
+
+      <div class="register-link">
+        Don't have an account? <a href="{{ url_for('register') }}">Register here</a>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

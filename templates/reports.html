@@ -1,0 +1,298 @@
+{% extends "base.html" %}
+{% block title %}Sit-in Reports{% endblock %}
+{% block nav_brand %}College of Computer Studies Admin{% endblock %}
+{% block nav_links %}{% include "admin_nav.html" %}{% endblock %}
+
+{% block extra_head %}
+<style>
+  .reports-page {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #1a237e 0%, #1565c0 50%, #0288d1 100%);
+    padding: 2rem;
+    margin: -1.5rem;
+  }
+
+  .reports-wrapper {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .page-header {
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .page-header-text h1 {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 2rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin: 0;
+  }
+
+  .page-header-text p {
+    color: rgba(255,255,255,0.7);
+    font-size: 0.875rem;
+    margin: 0.25rem 0 0;
+  }
+
+  /* Stats row */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .stat-card {
+    background: rgba(255,255,255,0.12);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 12px;
+    padding: 1rem 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+  }
+
+  .stat-icon { font-size: 1.75rem; flex-shrink: 0; }
+
+  .stat-info .num {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: #f9c600;
+    line-height: 1;
+  }
+
+  .stat-info .lbl {
+    color: rgba(255,255,255,0.75);
+    font-size: 0.78rem;
+    margin-top: 0.1rem;
+  }
+
+  /* Filter bar */
+  .filter-bar {
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 12px;
+    padding: 0.85rem 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+    flex-wrap: wrap;
+  }
+
+  .filter-bar label {
+    color: rgba(255,255,255,0.8);
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
+
+  .filter-select {
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 7px;
+    color: #ffffff;
+    padding: 0.35rem 0.75rem;
+    font-size: 0.82rem;
+    cursor: pointer;
+    outline: none;
+  }
+
+  .filter-select option { background: #1a237e; color: #fff; }
+
+  /* Table card */
+  .table-card {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 1.75rem;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+  }
+
+  table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+
+  thead tr {
+    background: linear-gradient(135deg, #1a237e, #1565c0);
+    color: white;
+  }
+
+  thead th {
+    padding: 0.85rem 0.9rem;
+    text-align: left;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+  }
+
+  thead th:first-child { border-radius: 10px 0 0 10px; }
+  thead th:last-child  { border-radius: 0 10px 10px 0; }
+
+  tbody tr { border-bottom: 1px solid #f0f4ff; transition: background 0.15s; }
+  tbody tr:hover { background: #f5f8ff; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody td { padding: 0.85rem 0.9rem; color: #2d3a5a; vertical-align: middle; }
+
+  .sit-id {
+    font-family: monospace;
+    background: #e8edf8;
+    color: #1a237e;
+    font-weight: 700;
+    padding: 0.2rem 0.5rem;
+    border-radius: 5px;
+    font-size: 0.8rem;
+  }
+
+  .student-name { font-weight: 700; color: #1a237e; }
+  .student-id   { font-size: 0.78rem; color: #78909c; }
+
+  .lab-badge {
+    background: #e3f2fd;
+    color: #1565c0;
+    font-weight: 700;
+    font-size: 0.78rem;
+    padding: 0.2rem 0.55rem;
+    border-radius: 6px;
+  }
+
+  .purpose-chip {
+    background: #f3e5f5;
+    color: #6a1b9a;
+    font-size: 0.78rem;
+    font-weight: 600;
+    padding: 0.2rem 0.55rem;
+    border-radius: 6px;
+  }
+
+  .badge {
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 0.25rem 0.65rem;
+    border-radius: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    display: inline-block;
+  }
+
+  .badge-active  { background: #e3f2fd; color: #1565c0; }
+  .badge-done    { background: #e8f5e9; color: #2e7d32; }
+  .badge-pending { background: #fff8e1; color: #f57f17; }
+
+  .no-data { text-align: center; color: #90a4ae; padding: 3rem; font-style: italic; font-size: 0.9rem; }
+
+  .footer-info {
+    font-size: 0.8rem;
+    color: #90a4ae;
+    margin-top: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  @media (max-width: 900px) {
+    .stats-row { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  @media (max-width: 600px) {
+    .stats-row { grid-template-columns: 1fr; }
+    .reports-page { padding: 1rem; margin: -1rem; }
+    table { font-size: 0.8rem; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="reports-page">
+  <div class="reports-wrapper">
+
+    <div class="page-header">
+      <div class="page-header-text">
+        <h1>📋 Sit-in Reports</h1>
+        <p>Complete history of all sit-in sessions</p>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-icon">📊</div>
+        <div class="stat-info">
+          <div class="num">{{ records|length }}</div>
+          <div class="lbl">Total Records</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">✅</div>
+        <div class="stat-info">
+          <div class="num">{{ records | selectattr('status', 'equalto', 'Done') | list | length }}</div>
+          <div class="lbl">Completed</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">🔵</div>
+        <div class="stat-info">
+          <div class="num">{{ records | selectattr('status', 'equalto', 'Active') | list | length }}</div>
+          <div class="lbl">Active</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">⏳</div>
+        <div class="stat-info">
+          <div class="num">{{ records | selectattr('status', 'equalto', 'Pending') | list | length }}</div>
+          <div class="lbl">Pending</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="table-card">
+      <table>
+        <thead>
+          <tr>
+            <th>Sit ID</th>
+            <th>Student</th>
+            <th>Purpose</th>
+            <th>Lab</th>
+            <th>Date & Time</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in records %}
+          <tr>
+            <td><span class="sit-id">{{ r.sit_id }}</span></td>
+            <td>
+              <div class="student-name">{{ r.name }}</div>
+              <div class="student-id">ID: {{ r.id }}</div>
+            </td>
+            <td><span class="purpose-chip">{{ r.purpose }}</span></td>
+            <td><span class="lab-badge">Room {{ r.lab }}</span></td>
+            <td style="white-space:nowrap;font-size:0.82rem;">{{ r.date }}</td>
+            <td>
+              <span class="badge {{ 'badge-active' if r.status == 'Active' else ('badge-pending' if r.status == 'Pending' else 'badge-done') }}">
+                {{ r.status }}
+              </span>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="6" class="no-data">No sit-in records yet.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <div class="footer-info">
+        <span>Showing {{ records|length }} record(s)</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,202 @@
+{% extends "base.html" %}
+{% block title %}Reservation{% endblock %}
+{% block nav_brand %}College of Computer Studies Admin{% endblock %}
+{% block nav_links %}{% include "admin_nav.html" %}{% endblock %}
+{% block content %}
+
+<div class="card">
+  <div class="page-title">Laboratory Reservations</div>
+
+  <!-- Add Reservation Form -->
+  <div style="padding: 1.5rem;">
+
+  <div style="display: flex; gap: 1.5rem; flex-wrap: wrap;">
+
+    <!-- COLUMN 1: PC STATUS -->
+    <div style="flex: 1; min-width: 300px;">
+      <h4 style="margin-bottom: 1rem;">💻 PC Status</h4>
+
+      {% set active_count = reservations | selectattr('status','equalto','Approved') | list | length %}
+
+      {% if active_count > 0 %}
+        {% for r in reservations if r.status == 'Approved' %}
+          <div style="background:#ef5350; color:white; padding:0.7rem; border-radius:6px; margin-bottom:0.5rem;">
+            Occupied: {{ r.name }} ({{ r.lab }})
+          </div>
+        {% endfor %}
+      {% else %}
+        <div style="background:#66bb6a; color:white; padding:0.7rem; border-radius:6px;">
+          All PCs Available
+        </div>
+      {% endif %}
+    </div>
+
+
+    <!-- COLUMN 2: REQUESTS -->
+    <div style="flex: 1; min-width: 300px;">
+      <h4 style="margin-bottom: 1rem;">📥 Requests</h4>
+
+      {% for r in reservations if r.status == 'Pending' %}
+        <div style="background:white; padding:0.8rem; border-radius:6px; margin-bottom:0.5rem; box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+          <strong>{{ r.name }}</strong> - {{ r.lab }}
+
+          <div style="margin-top:0.5rem; display:flex; gap:0.5rem;">
+            <form method="POST" action="/admin/reservation/approve/{{ r.id }}">
+              <button style="background:#2e7d32; color:white; border:none; padding:0.3rem 0.7rem; border-radius:4px;">
+                Approve
+              </button>
+            </form>
+
+            <form method="POST" action="/admin/reservation/reject/{{ r.id }}">
+              <button style="background:#c62828; color:white; border:none; padding:0.3rem 0.7rem; border-radius:4px;">
+                Reject
+              </button>
+            </form>
+          </div>
+        </div>
+      {% else %}
+        <p style="color:#999;">No pending requests</p>
+      {% endfor %}
+    </div>
+
+
+    <!-- COLUMN 3: LOGS -->
+    <div style="flex: 1; min-width: 300px;">
+      <h4 style="margin-bottom: 1rem;">📋 Activity Logs</h4>
+
+      {% for r in reservations %}
+        <div style="background:#f5f7fa; padding:0.6rem; border-radius:6px; margin-bottom:0.5rem;">
+          {{ r.name }} - {{ r.status }} ({{ r.lab }})
+        </div>
+      {% endfor %}
+    </div>
+
+  </div>
+
+</div>
+
+        <div style="display: flex; flex-direction: column; gap: 0.3rem;">
+          <label style="font-size: 0.85rem; font-weight: 500;">Laboratory</label>
+          <select name="lab" required
+            style="padding: 0.5rem 0.8rem; border: 1px solid #ccc; border-radius: 6px; font-size: 0.9rem; width: 150px;">
+            <option value="">-- Select Lab --</option>
+            <option value="Lab 1">Lab 1</option>
+            <option value="Lab 2">Lab 2</option>
+            <option value="Lab 3">Lab 3</option>
+            <option value="Lab 4">Lab 4</option>
+            <option value="Lab 5">Lab 5</option>
+            <option value="Lab 6">Lab 6</option>
+          </select>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 0.3rem;">
+          <label style="font-size: 0.85rem; font-weight: 500;">Purpose</label>
+          <select name="purpose" required
+            style="padding: 0.5rem 0.8rem; border: 1px solid #ccc; border-radius: 6px; font-size: 0.9rem; width: 160px;">
+            <option value="">-- Select Purpose --</option>
+            <option value="C Programming">C Programming</option>
+            <option value="Java">Java</option>
+            <option value="Python">Python</option>
+            <option value="Web Development">Web Development</option>
+            <option value="Database">Database</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 0.3rem;">
+          <label style="font-size: 0.85rem; font-weight: 500;">Date</label>
+          <input type="date" name="date" required
+            style="padding: 0.5rem 0.8rem; border: 1px solid #ccc; border-radius: 6px; font-size: 0.9rem; width: 160px;">
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 0.3rem;">
+          <label style="font-size: 0.85rem; font-weight: 500;">Time</label>
+          <input type="time" name="time" required
+            style="padding: 0.5rem 0.8rem; border: 1px solid #ccc; border-radius: 6px; font-size: 0.9rem; width: 130px;">
+        </div>
+
+        <button type="submit"
+          style="padding: 0.55rem 1.2rem; background: #1a73e8; color: white; border: none; border-radius: 6px; font-size: 0.9rem; cursor: pointer; font-weight: 500;">
+          + Add Reservation
+        </button>
+
+      </div>
+    </form>
+  </div>
+
+  <!-- Reservation Table -->
+  <div style="padding: 1.5rem;">
+    {% if reservations %}
+    <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+      <thead>
+        <tr style="background: #f5f7fa; text-align: left;">
+          <th style="padding: 0.75rem 1rem; border-bottom: 2px solid #e0e0e0;">#</th>
+          <th style="padding: 0.75rem 1rem; border-bottom: 2px solid #e0e0e0;">Student ID</th>
+          <th style="padding: 0.75rem 1rem; border-bottom: 2px solid #e0e0e0;">Name</th>
+          <th style="padding: 0.75rem 1rem; border-bottom: 2px solid #e0e0e0;">Laboratory</th>
+          <th style="padding: 0.75rem 1rem; border-bottom: 2px solid #e0e0e0;">Purpose</th>
+          <th style="padding: 0.75rem 1rem; border-bottom: 2px solid #e0e0e0;">Date</th>
+          <th style="padding: 0.75rem 1rem; border-bottom: 2px solid #e0e0e0;">Time</th>
+          <th style="padding: 0.75rem 1rem; border-bottom: 2px solid #e0e0e0;">Status</th>
+          <th style="padding: 0.75rem 1rem; border-bottom: 2px solid #e0e0e0;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in reservations %}
+        <tr style="border-bottom: 1px solid #f0f0f0;">
+          <td style="padding: 0.75rem 1rem;">{{ loop.index }}</td>
+          <td style="padding: 0.75rem 1rem;">{{ r.student_id }}</td>
+          <td style="padding: 0.75rem 1rem;">{{ r.name }}</td>
+          <td style="padding: 0.75rem 1rem;">
+            <span style="background: #e8f0fe; color: #1a73e8; padding: 0.2rem 0.6rem; border-radius: 4px; font-weight: 500;">
+              {{ r.lab }}
+            </span>
+          </td>
+          <td style="padding: 0.75rem 1rem;">{{ r.purpose }}</td>
+          <td style="padding: 0.75rem 1rem;">{{ r.date }}</td>
+          <td style="padding: 0.75rem 1rem;">{{ r.time }}</td>
+          <td style="padding: 0.75rem 1rem;">
+            {% if r.status == 'Pending' %}
+              <span style="background: #fff3e0; color: #e65100; padding: 0.2rem 0.6rem; border-radius: 4px; font-weight: 500;">Pending</span>
+            {% elif r.status == 'Approved' %}
+              <span style="background: #e8f5e9; color: #2e7d32; padding: 0.2rem 0.6rem; border-radius: 4px; font-weight: 500;">Approved</span>
+            {% elif r.status == 'Rejected' %}
+              <span style="background: #ffebee; color: #c62828; padding: 0.2rem 0.6rem; border-radius: 4px; font-weight: 500;">Rejected</span>
+            {% endif %}
+          </td>
+          <td style="padding: 0.75rem 1rem; display: flex; gap: 0.5rem;">
+            {% if r.status == 'Pending' %}
+            <form method="POST" action="/admin/reservation/approve/{{ r.id }}">
+              <button type="submit"
+                style="padding: 0.3rem 0.7rem; background: #2e7d32; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem;">
+                Approve
+              </button>
+            </form>
+            <form method="POST" action="/admin/reservation/reject/{{ r.id }}">
+              <button type="submit"
+                style="padding: 0.3rem 0.7rem; background: #c62828; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem;">
+                Reject
+              </button>
+            </form>
+            {% endif %}
+            <form method="POST" action="/admin/reservation/delete/{{ r.id }}">
+              <button type="submit"
+                style="padding: 0.3rem 0.7rem; background: #757575; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem;"
+                onclick="return confirm('Delete this reservation?')">
+                Delete
+              </button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="no-data" style="padding: 3rem; text-align: center; color: #999;">
+      No reservations yet.
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+{% endblock %}

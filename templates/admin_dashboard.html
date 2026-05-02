@@ -1,0 +1,317 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard{% endblock %}
+{% block nav_brand %}College of Computer Studies Admin{% endblock %}
+{% block nav_links %}{% include "admin_nav.html" %}{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+  .dashboard-page {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #1a237e 0%, #1565c0 50%, #0288d1 100%);
+    padding: 2rem;
+    margin: -1.5rem;
+  }
+
+  .dashboard-wrapper {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  .page-header h1 {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 2rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin: 0 0 0.2rem;
+  }
+
+  .page-header p {
+    color: rgba(255,255,255,0.7);
+    font-size: 0.875rem;
+    margin: 0;
+  }
+
+  /* Stats strip */
+  .stats-strip {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+  }
+
+  .stat-card {
+    background: rgba(255,255,255,0.12);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 14px;
+    padding: 1.1rem 1.4rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .stat-icon-wrap {
+    background: rgba(249,198,0,0.2);
+    border-radius: 10px;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    flex-shrink: 0;
+  }
+
+  .stat-info .num {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 2rem;
+    font-weight: 800;
+    color: #f9c600;
+    line-height: 1;
+  }
+
+  .stat-info .lbl {
+    color: rgba(255,255,255,0.75);
+    font-size: 0.8rem;
+    margin-top: 0.15rem;
+  }
+
+  /* Main grid */
+  .dashboard-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.25rem;
+  }
+
+  /* Cards */
+  .card {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 1.5rem;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    border: none;
+  }
+
+  .card-title {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #1a237e;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid #f0f4ff;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .card-title.gold { color: #f5a800; border-bottom-color: #fff8e1; }
+
+  /* Chart */
+  .chart-wrap {
+    height: 230px;
+    position: relative;
+    margin-top: 0.75rem;
+  }
+
+  /* Announcement form */
+  .ann-textarea {
+    width: 100%;
+    border: 1.5px solid #dde3f8;
+    border-radius: 9px;
+    padding: 0.7rem 0.9rem;
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.875rem;
+    color: #1a237e;
+    background: #f8faff;
+    resize: vertical;
+    min-height: 80px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    box-sizing: border-box;
+  }
+
+  .ann-textarea:focus {
+    border-color: #1565c0;
+    box-shadow: 0 0 0 3px rgba(21,101,192,0.12);
+    background: #fff;
+  }
+
+  .btn-submit {
+    margin-top: 0.6rem;
+    background: linear-gradient(135deg, #f9c600, #f5a800);
+    color: #1a237e;
+    border: none;
+    border-radius: 8px;
+    padding: 0.55rem 1.4rem;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(249,198,0,0.35);
+    transition: all 0.2s;
+  }
+
+  .btn-submit:hover {
+    background: linear-gradient(135deg, #ffd700, #f9c600);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(249,198,0,0.45);
+  }
+
+  /* Posted announcements */
+  .posted-label {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: #90a4ae;
+    margin: 1.1rem 0 0.6rem;
+    padding-bottom: 0.35rem;
+    border-bottom: 1.5px solid #f0f4ff;
+  }
+
+  .ann-item {
+    border-bottom: 1px solid #f0f4ff;
+    padding: 0.65rem 0;
+  }
+
+  .ann-item:last-child { border-bottom: none; }
+
+  .ann-meta {
+    font-weight: 700;
+    color: #1a237e;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+
+  .ann-body {
+    color: #1565c0;
+    font-size: 0.82rem;
+    margin-top: 0.25rem;
+    line-height: 1.5;
+  }
+
+  .ann-empty {
+    color: #90a4ae;
+    font-size: 0.85rem;
+    text-align: center;
+    padding: 1rem 0;
+    font-style: italic;
+  }
+
+  @media (max-width: 768px) {
+    .dashboard-grid  { grid-template-columns: 1fr; }
+    .stats-strip     { grid-template-columns: 1fr; }
+    .dashboard-page  { padding: 1rem; margin: -1rem; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-page">
+  <div class="dashboard-wrapper">
+
+    <div class="page-header">
+      <h1>🏠 Admin Dashboard</h1>
+      <p>College of Computer Studies — Sit-in Monitoring System</p>
+    </div>
+
+    <!-- Stats Strip -->
+    <div class="stats-strip">
+      <div class="stat-card">
+        <div class="stat-icon-wrap">👨‍🎓</div>
+        <div class="stat-info">
+          <div class="num">{{ students|length }}</div>
+          <div class="lbl">Students Registered</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon-wrap">🖥️</div>
+        <div class="stat-info">
+          <div class="num">{{ currently_sitin }}</div>
+          <div class="lbl">Currently Sitting In</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon-wrap">📋</div>
+        <div class="stat-info">
+          <div class="num">{{ total_sitin }}</div>
+          <div class="lbl">Total Sit-in Sessions</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chart + Announcements -->
+    <div class="dashboard-grid">
+
+      <!-- Chart Card -->
+      <div class="card">
+        <div class="card-title">📊 Sit-in by Purpose</div>
+        <div class="chart-wrap">
+          <canvas id="statsChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Announcements Card -->
+      <div class="card">
+        <div class="card-title gold">📢 Post Announcement</div>
+        <form method="POST" action="{{ url_for('post_announcement') }}">
+          <textarea name="body" class="ann-textarea" placeholder="Write a new announcement..."></textarea>
+          <button type="submit" class="btn-submit">📤 Submit</button>
+        </form>
+
+        <div class="posted-label">Posted Announcements</div>
+        {% for ann in announcements %}
+        <div class="ann-item">
+          <div class="ann-meta">{{ ann.author }} &nbsp;·&nbsp; {{ ann.date }}</div>
+          {% if ann.body %}<div class="ann-body">{{ ann.body }}</div>{% endif %}
+        </div>
+        {% else %}
+        <div class="ann-empty">No announcements posted yet.</div>
+        {% endfor %}
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  const statsData = {{ stats|safe }};
+  const labels = Object.keys(statsData).length ? Object.keys(statsData) : ['C#','C','Java','ASP.Net','PHP'];
+  const values = Object.keys(statsData).length ? Object.values(statsData) : [8,12,5,3,10];
+
+  new Chart(document.getElementById('statsChart'), {
+    type: 'pie',
+    data: {
+      labels,
+      datasets: [{
+        data: values,
+        backgroundColor: ['#1565c0','#f9c600','#0288d1','#1a237e','#43a047','#e53935','#f57c00'],
+        borderWidth: 3,
+        borderColor: '#fff'
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: {
+            font: { family: 'Nunito', size: 11 },
+            boxWidth: 14,
+            padding: 12
+          }
+        }
+      }
+    }
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,394 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit' if student else 'Add' }} Student{% endblock %}
+{% block nav_brand %}College of Computer Studies Admin{% endblock %}
+{% block nav_links %}{% include "admin_nav.html" %}{% endblock %}
+
+{% block extra_head %}
+<style>
+  .form-page {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #1a237e 0%, #1565c0 50%, #0288d1 100%);
+    padding: 2rem;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+  }
+
+  .form-wrapper {
+    width: 100%;
+    max-width: 700px;
+  }
+
+  .form-header {
+    margin-bottom: 1.5rem;
+  }
+
+  .form-header h1 {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 2rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin: 0;
+  }
+
+  .form-header p {
+    color: rgba(255,255,255,0.7);
+    font-size: 0.875rem;
+    margin: 0.25rem 0 0;
+  }
+
+  .form-card {
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+    overflow: hidden;
+  }
+
+  /* Profile photo section */
+  .photo-section {
+    background: linear-gradient(135deg, #1a237e, #1565c0);
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .photo-container {
+    position: relative;
+    width: 110px;
+    height: 110px;
+    cursor: pointer;
+  }
+
+  .photo-preview {
+    width: 110px;
+    height: 110px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 4px solid rgba(255,255,255,0.4);
+    background: rgba(255,255,255,0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+
+  .photo-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: none;
+    border-radius: 50%;
+  }
+
+  .photo-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    color: rgba(255,255,255,0.8);
+    font-size: 2rem;
+  }
+
+  .photo-overlay {
+    position: absolute;
+    bottom: 4px;
+    right: 4px;
+    background: #f9c600;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+    transition: transform 0.2s;
+  }
+
+  .photo-container:hover .photo-overlay {
+    transform: scale(1.1);
+  }
+
+  .photo-container:hover .photo-preview {
+    border-color: rgba(255,255,255,0.7);
+  }
+
+  #photoInput { display: none; }
+
+  .photo-hint {
+    color: rgba(255,255,255,0.75);
+    font-size: 0.8rem;
+    text-align: center;
+  }
+
+  .photo-hint strong {
+    color: #f9c600;
+  }
+
+  /* Form body */
+  .form-body {
+    padding: 1.75rem;
+  }
+
+  .section-label {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: #90a4ae;
+    margin: 1.25rem 0 0.75rem;
+    padding-bottom: 0.4rem;
+    border-bottom: 1.5px solid #f0f4ff;
+  }
+
+  .section-label:first-child { margin-top: 0; }
+
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.85rem;
+  }
+
+  .form-group { margin-bottom: 0; }
+
+  .form-label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    color: #546e7a;
+    margin-bottom: 0.35rem;
+  }
+
+  .form-control {
+    width: 100%;
+    padding: 0.6rem 0.85rem;
+    border: 1.5px solid #dde3f8;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    color: #1a237e;
+    background: #f8faff;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    box-sizing: border-box;
+  }
+
+  .form-control:focus {
+    outline: none;
+    border-color: #1565c0;
+    box-shadow: 0 0 0 3px rgba(21,101,192,0.1);
+    background: #fff;
+  }
+
+  .form-control[readonly] {
+    background: #eef0f8;
+    color: #78909c;
+    cursor: not-allowed;
+  }
+
+  /* Buttons */
+  .form-actions {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+    padding-top: 1.25rem;
+    border-top: 2px solid #f0f4ff;
+  }
+
+  .btn-yellow {
+    background: linear-gradient(135deg, #f9c600, #f5a800);
+    color: #1a237e;
+    border: none;
+    border-radius: 8px;
+    padding: 0.65rem 1.5rem;
+    font-weight: 700;
+    font-size: 0.9rem;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(249,198,0,0.35);
+    transition: all 0.2s;
+    font-family: 'Rajdhani', sans-serif;
+    letter-spacing: 0.3px;
+  }
+
+  .btn-yellow:hover {
+    background: linear-gradient(135deg, #ffd700, #f9c600);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(249,198,0,0.45);
+  }
+
+  .btn-cancel {
+    background: #f0f4ff;
+    color: #546e7a;
+    border: 1.5px solid #dde3f8;
+    border-radius: 8px;
+    padding: 0.65rem 1.5rem;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    transition: all 0.2s;
+    font-family: 'Rajdhani', sans-serif;
+  }
+
+  .btn-cancel:hover {
+    background: #e3e8f8;
+    color: #1a237e;
+  }
+
+  @media (max-width: 600px) {
+    .grid-2 { grid-template-columns: 1fr; }
+    .form-page { padding: 1rem; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="form-page">
+  <div class="form-wrapper">
+
+    <div class="form-header">
+      <h1>{{ '✏️ Edit Student' if student else '➕ Add Student' }}</h1>
+      <p>{{ 'Update student information and profile photo' if student else 'Fill in the details to register a new student' }}</p>
+    </div>
+
+    <div class="form-card">
+
+      <!-- Profile Photo Section -->
+      <div class="photo-section">
+        <div class="photo-container" onclick="document.getElementById('photoInput').click()">
+          <div class="photo-preview" id="photoPreview">
+            <img id="photoImg"
+              {% if student and student.get('photo') %}
+                src="{{ student.photo }}" style="display:block;"
+              {% endif %}
+              alt="Profile Photo">
+            <div class="photo-placeholder" id="photoPlaceholder"
+              {% if student and student.get('photo') %}style="display:none;"{% endif %}>
+              👤
+            </div>
+          </div>
+          <div class="photo-overlay">📷</div>
+        </div>
+        <input type="file" id="photoInput" name="photo" accept="image/*" onchange="previewPhoto(event)">
+        <div class="photo-hint">
+          Click the photo to <strong>upload a profile picture</strong><br>
+          JPG, PNG or GIF — max 2MB
+        </div>
+      </div>
+
+      <!-- Form Body -->
+      <div class="form-body">
+        <form method="POST" enctype="multipart/form-data">
+
+          <div class="section-label">Account Info</div>
+          <div class="grid-2">
+            <div class="form-group">
+              <label class="form-label">ID Number *</label>
+              <input type="text" name="id_number" class="form-control"
+                value="{{ student.id if student else '' }}"
+                {{ 'readonly' if student }} required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Year Level *</label>
+              <input type="number" name="year_level" class="form-control"
+                min="1" max="4"
+                value="{{ student.year if student else 1 }}" required>
+            </div>
+          </div>
+
+          <div class="section-label" style="margin-top:1rem;">Personal Info</div>
+          <div class="grid-2" style="margin-bottom:0.85rem;">
+            <div class="form-group">
+              <label class="form-label">First Name *</label>
+              <input type="text" name="first_name" class="form-control"
+                value="{{ student.first if student else '' }}" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Last Name *</label>
+              <input type="text" name="last_name" class="form-control"
+                value="{{ student.last if student else '' }}" required>
+            </div>
+          </div>
+          <div class="grid-2">
+            <div class="form-group">
+              <label class="form-label">Middle Name</label>
+              <input type="text" name="middle_name" class="form-control"
+                value="{{ student.middle if student else '' }}">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Course</label>
+              <input type="text" name="course" class="form-control"
+                value="{{ student.course if student else 'BSIT' }}">
+            </div>
+          </div>
+
+          <div class="section-label" style="margin-top:1rem;">Contact & Session</div>
+          <div class="grid-2" style="margin-bottom:0.85rem;">
+            <div class="form-group">
+              <label class="form-label">Email</label>
+              <input type="email" name="email" class="form-control"
+                value="{{ student.email if student else '' }}">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Remaining Sessions</label>
+              <input type="number" name="session" class="form-control"
+                value="{{ student.session if student else 30 }}" min="0" max="30">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Address</label>
+            <input type="text" name="address" class="form-control"
+              value="{{ student.address if student else '' }}">
+          </div>
+
+          {% if not student %}
+          <div class="section-label" style="margin-top:1rem;">Security</div>
+          <div class="form-group">
+            <label class="form-label">Password *</label>
+            <input type="password" name="password" class="form-control" required>
+          </div>
+          {% endif %}
+
+          <div class="form-actions">
+            <button type="submit" class="btn-yellow">
+              {{ '✅ Update Student' if student else '💾 Save Student' }}
+            </button>
+            <a href="{{ url_for('student_list') }}" class="btn-cancel">✕ Cancel</a>
+          </div>
+        </form>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  function previewPhoto(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    if (file.size > 2 * 1024 * 1024) {
+      alert('File is too large. Please choose an image under 2MB.');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const img = document.getElementById('photoImg');
+      const placeholder = document.getElementById('photoPlaceholder');
+      img.src = e.target.result;
+      img.style.display = 'block';
+      placeholder.style.display = 'none';
+    };
+    reader.readAsDataURL(file);
+  }
+</script>
+{% endblock %}

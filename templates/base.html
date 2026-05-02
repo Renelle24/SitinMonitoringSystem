@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CCS | {% block title %}Home{% endblock %}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Nunito:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --navy: #1a2a5e; --gold: #c8970a; --white: #fff;
+      --gray-50: #f8f9fa; --gray-100: #f1f5f9; --gray-200: #e2e8f0;
+      --gray-400: #94a3b8; --gray-600: #475569; --gray-800: #1e293b;
+      --blue: #1a73e8; --danger: #dc2626; --success: #16a34a;
+    }
+    body { font-family: 'Nunito', sans-serif; background: var(--gray-100); min-height: 100vh; display: flex; flex-direction: column; }
+
+    nav {
+      background: var(--navy); padding: 0 1.5rem; display: flex; align-items: center;
+      justify-content: space-between; height: 50px; position: sticky; top: 0; z-index: 200;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.2);
+    }
+    .nav-brand { color: white; font-family: 'Rajdhani', sans-serif; font-weight: 600; font-size: 1rem; white-space: nowrap; }
+    .nav-links { display: flex; gap: 0.15rem; align-items: center; flex-wrap: wrap; }
+    .nav-links a {
+      color: rgba(255,255,255,0.85); text-decoration: none; padding: 0.35rem 0.65rem;
+      font-size: 0.82rem; font-weight: 600; border-radius: 4px; transition: background 0.2s; white-space: nowrap;
+    }
+    .nav-links a:hover, .nav-links a.active { background: rgba(255,255,255,0.15); color: white; }
+    .btn-logout {
+      background: var(--gold); color: white; border: none; padding: 0.35rem 0.9rem;
+      border-radius: 5px; font-weight: 700; cursor: pointer; font-size: 0.82rem;
+      font-family: 'Nunito', sans-serif; transition: background 0.2s; text-decoration: none; margin-left: 0.3rem;
+    }
+    .btn-logout:hover { background: #a37508; }
+
+    .main { flex: 1; padding: 1.5rem; max-width: 1200px; margin: 0 auto; width: 100%; }
+
+    /* Flash messages */
+    .alerts { padding: 0 1.5rem; max-width: 1200px; margin: 0.75rem auto 0; width: 100%; }
+    .alert {
+      padding: 0.75rem 1rem; border-radius: 7px; font-size: 0.875rem; font-weight: 600;
+      margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;
+    }
+    .alert-success { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
+    .alert-danger  { background: #fee2e2; color: #dc2626; border: 1px solid #fecaca; }
+    .alert-info    { background: #dbeafe; color: #1d4ed8; border: 1px solid #bfdbfe; }
+
+    /* Cards */
+    .card { background: white; border-radius: 10px; padding: 1.25rem; box-shadow: 0 2px 8px rgba(0,0,0,0.06); border: 1px solid var(--gray-200); margin-bottom: 1.25rem; }
+    .card-header {
+      background: var(--navy); color: white; border-radius: 7px; padding: 0.5rem 1rem;
+      font-family: 'Rajdhani', sans-serif; font-weight: 600; font-size: 0.95rem; margin-bottom: 1rem;
+    }
+    .card-header.gold { background: #8a6508; }
+    .card-header.blue { background: #1a56a8; }
+
+    /* Tables */
+    .page-title { font-family: 'Rajdhani', sans-serif; font-size: 1.6rem; font-weight: 700; color: var(--navy); text-align: center; margin-bottom: 1.25rem; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    thead th { background: var(--gray-100); color: var(--gray-600); font-weight: 700; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.03em; padding: 0.65rem 0.875rem; border-bottom: 2px solid var(--gray-200); text-align: left; }
+    tbody td { padding: 0.6rem 0.875rem; border-bottom: 1px solid var(--gray-200); color: var(--gray-800); }
+    tbody tr:hover { background: var(--gray-50); }
+    .no-data { text-align: center; padding: 2rem; color: var(--gray-400); font-size: 0.9rem; }
+
+    /* Buttons */
+    .btn { display: inline-block; padding: 0.45rem 1rem; border-radius: 6px; font-weight: 700; font-size: 0.85rem; font-family: 'Nunito', sans-serif; cursor: pointer; border: none; text-decoration: none; transition: opacity 0.2s, transform 0.1s; }
+    .btn:hover { opacity: 0.88; transform: translateY(-1px); }
+    .btn-primary { background: var(--navy); color: white; }
+    .btn-blue { background: var(--blue); color: white; }
+    .btn-success { background: var(--success); color: white; }
+    .btn-danger  { background: var(--danger); color: white; }
+    .btn-secondary { background: var(--gray-200); color: var(--gray-800); }
+    .btn-gold  { background: var(--gold); color: white; }
+    .btn-sm { padding: 0.25rem 0.65rem; font-size: 0.8rem; }
+
+    /* Forms */
+    .form-group { margin-bottom: 1rem; }
+    .form-label { display: block; font-size: 0.78rem; font-weight: 700; color: var(--gray-600); margin-bottom: 0.35rem; text-transform: uppercase; letter-spacing: 0.04em; }
+    .form-control {
+      width: 100%; padding: 0.6rem 0.875rem; border: 1.5px solid var(--gray-200);
+      border-radius: 6px; font-family: 'Nunito', sans-serif; font-size: 0.875rem; color: var(--navy);
+      outline: none; transition: border-color 0.2s, box-shadow 0.2s; background: var(--gray-50);
+    }
+    .form-control:focus { border-color: var(--navy); box-shadow: 0 0 0 3px rgba(26,42,94,0.1); background: white; }
+    .form-control::placeholder { color: var(--gray-400); }
+
+    /* Badges */
+    .badge { display: inline-block; padding: 0.2rem 0.6rem; border-radius: 20px; font-size: 0.75rem; font-weight: 700; }
+    .badge-active  { background: #dcfce7; color: #15803d; }
+    .badge-done    { background: var(--gray-100); color: var(--gray-600); }
+    .badge-pending { background: #fef3c7; color: #d97706; }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
+    @media (max-width: 768px) { .grid-2 { grid-template-columns: 1fr; } }
+  </style>
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+  <nav>
+    <div class="nav-brand">{% block nav_brand %}College of Computer Studies Sit-in Monitoring System{% endblock %}</div>
+    <div class="nav-links">{% block nav_links %}
+      <a href="{{ url_for('login') }}">Home</a>
+      <a href="#">Community ▾</a>
+      <a href="#">About</a>
+      <a href="{{ url_for('login') }}">Login</a>
+      <a href="{{ url_for('register') }}">Register</a>
+    {% endblock %}</div>
+  </nav>
+
+  <div class="alerts">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for cat, msg in messages %}
+        <div class="alert alert-{{ cat }}">{{ msg }}</div>
+      {% endfor %}
+    {% endwith %}
+  </div>
+
+  <div class="main">{% block content %}{% endblock %}</div>
+</body>
+</html>

@@ -1,0 +1,325 @@
+{% extends "base.html" %}
+{% block title %}Students{% endblock %}
+{% block nav_brand %}College of Computer Studies Admin{% endblock %}
+{% block nav_links %}{% include "admin_nav.html" %}{% endblock %}
+
+{% block extra_head %}
+<style>
+  .students-page {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #1a237e 0%, #1565c0 50%, #0288d1 100%);
+    padding: 2rem;
+  }
+
+  .students-wrapper {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .page-header {
+    margin-bottom: 1.5rem;
+  }
+
+  .page-header h1 {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 2rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin: 0;
+    letter-spacing: 0.5px;
+  }
+
+  .page-header p {
+    color: rgba(255,255,255,0.7);
+    font-size: 0.875rem;
+    margin: 0.25rem 0 0;
+  }
+
+  .card {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 1.75rem;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+    border: none;
+  }
+
+  .card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1.25rem;
+    border-bottom: 2px solid #f0f4ff;
+  }
+
+  .action-group {
+    display: flex;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+  }
+
+  /* Yellow button */
+  .btn-yellow {
+    background: linear-gradient(135deg, #f9c600, #f5a800);
+    color: #1a237e;
+    border: none;
+    border-radius: 8px;
+    padding: 0.5rem 1.1rem;
+    font-weight: 700;
+    font-size: 0.875rem;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    box-shadow: 0 2px 8px rgba(249,198,0,0.35);
+    transition: all 0.2s;
+  }
+  .btn-yellow:hover {
+    background: linear-gradient(135deg, #ffd700, #f9c600);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(249,198,0,0.45);
+  }
+
+  /* Blue button */
+  .btn-blue {
+    background: linear-gradient(135deg, #1565c0, #1976d2);
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    padding: 0.5rem 1.1rem;
+    font-weight: 700;
+    font-size: 0.875rem;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    box-shadow: 0 2px 8px rgba(21,101,192,0.3);
+    transition: all 0.2s;
+  }
+  .btn-blue:hover {
+    background: linear-gradient(135deg, #0d47a1, #1565c0);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(21,101,192,0.4);
+  }
+
+  /* Danger/red button (kept for delete) */
+  .btn-danger {
+    background: linear-gradient(135deg, #e53935, #c62828);
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    padding: 0.5rem 1.1rem;
+    font-weight: 700;
+    font-size: 0.875rem;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(229,57,53,0.3);
+    transition: all 0.2s;
+  }
+  .btn-danger:hover {
+    background: linear-gradient(135deg, #c62828, #b71c1c);
+    transform: translateY(-1px);
+  }
+
+  .btn-sm {
+    padding: 0.35rem 0.75rem;
+    font-size: 0.8rem;
+  }
+
+  /* Search bar */
+  .search-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: #f0f4ff;
+    border-radius: 10px;
+    padding: 0.4rem 0.75rem;
+    border: 1.5px solid #dde3f8;
+  }
+  .search-group input {
+    border: none;
+    background: transparent;
+    outline: none;
+    font-size: 0.875rem;
+    width: 180px;
+    color: #1a237e;
+  }
+  .search-group input::placeholder { color: #90a4c8; }
+  .search-group .btn-search {
+    background: linear-gradient(135deg, #1565c0, #1976d2);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 0.3rem 0.8rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .search-group .btn-search:hover { background: #0d47a1; }
+
+  /* Table */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+  }
+
+  thead tr {
+    background: linear-gradient(135deg, #1a237e, #1565c0);
+    color: white;
+  }
+
+  thead th {
+    padding: 0.85rem 1rem;
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.8rem;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  thead th:first-child { border-radius: 10px 0 0 10px; }
+  thead th:last-child  { border-radius: 0 10px 10px 0; }
+
+  tbody tr {
+    border-bottom: 1px solid #f0f4ff;
+    transition: background 0.15s;
+  }
+  tbody tr:hover { background: #f5f8ff; }
+  tbody tr:last-child { border-bottom: none; }
+
+  tbody td {
+    padding: 0.85rem 1rem;
+    color: #2d3a5a;
+    vertical-align: middle;
+  }
+
+  .id-badge {
+    background: #e8edf8;
+    color: #1a237e;
+    font-weight: 700;
+    padding: 0.2rem 0.6rem;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-family: monospace;
+  }
+
+  .session-badge {
+    background: #e8f5e9;
+    color: #2e7d32;
+    font-weight: 700;
+    padding: 0.2rem 0.6rem;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    display: inline-block;
+  }
+
+  .session-badge.low {
+    background: #fff3e0;
+    color: #e65100;
+  }
+
+  .session-badge.empty {
+    background: #ffebee;
+    color: #c62828;
+  }
+
+  .no-data {
+    text-align: center;
+    color: #90a4ae;
+    padding: 2.5rem;
+    font-style: italic;
+  }
+
+  .footer-info {
+    font-size: 0.8rem;
+    color: #90a4ae;
+    margin-top: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="students-page">
+  <div class="students-wrapper">
+
+    <div class="page-header">
+      <h1>👨‍🎓 Students Information</h1>
+      <p>Manage all registered students and their sit-in sessions</p>
+    </div>
+
+    <div class="card">
+      <div class="card-top">
+        <div class="action-group">
+          <a href="{{ url_for('add_student') }}" class="btn-yellow">
+            ＋ Add Student
+          </a>
+          <form method="POST" action="{{ url_for('reset_sessions') }}" style="margin:0;">
+            <button type="submit" class="btn-blue" onclick="return confirm('Reset all sessions to 30?')">
+              🔄 Reset All Sessions
+            </button>
+          </form>
+        </div>
+
+        <form method="GET" action="{{ url_for('student_list') }}" style="margin:0;">
+          <div class="search-group">
+            <span style="color:#90a4c8;font-size:0.85rem;">🔍</span>
+            <input type="text" name="q" value="{{ query }}" placeholder="Search by ID or name...">
+            <button type="submit" class="btn-search">Search</button>
+          </div>
+        </form>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>ID Number</th>
+            <th>Name</th>
+            <th>Year Level</th>
+            <th>Course</th>
+            <th>Sessions Left</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for s in students %}
+          <tr>
+            <td><span class="id-badge">{{ s.id }}</span></td>
+            <td><strong>{{ s.first }} {{ s.last }}</strong></td>
+            <td style="text-align:center;">Year {{ s.year }}</td>
+            <td>{{ s.course }}</td>
+            <td>
+              <span class="session-badge {% if s.session <= 0 %}empty{% elif s.session <= 5 %}low{% endif %}">
+                {{ s.session }} sessions
+              </span>
+            </td>
+            <td>
+              <div style="display:flex;gap:0.4rem;flex-wrap:wrap;">
+                <a href="{{ url_for('edit_student', sid=s.id) }}" class="btn-yellow btn-sm">✏️ Edit</a>
+                <form method="POST" action="{{ url_for('delete_student', sid=s.id) }}" style="display:inline;margin:0;">
+                  <button type="submit" class="btn-danger btn-sm" onclick="return confirm('Delete {{ s.first }} {{ s.last }}?')">🗑 Delete</button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="6" class="no-data">No students found.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+      <div class="footer-info">
+        📋 Showing <strong>{{ students|length }}</strong> student(s)
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
