@@ -1,0 +1,252 @@
+{% extends "base.html" %}
+{% block title %}Analytics{% endblock %}
+{% block nav_brand %}College of Computer Studies Admin{% endblock %}
+{% block nav_links %}{% include "admin_nav.html" %}{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+  .analytics-page {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #1a237e 0%, #1565c0 50%, #0288d1 100%);
+    padding: 2rem;
+    margin: -1.5rem;
+  }
+  .analytics-wrapper { max-width: 1200px; margin: 0 auto; }
+  .page-header h1 {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 2rem; font-weight: 700;
+    color: #fff; margin: 0 0 0.2rem;
+  }
+  .page-header p { color: rgba(255,255,255,0.7); font-size: 0.875rem; margin: 0 0 1.5rem; }
+
+  .stats-strip {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  .stat-card {
+    background: rgba(255,255,255,0.12);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 14px;
+    padding: 1.1rem 1.4rem;
+    display: flex; align-items: center; gap: 1rem;
+  }
+  .stat-icon { font-size: 2rem; }
+  .stat-num {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 2rem; font-weight: 800;
+    color: #f9c600; line-height: 1;
+  }
+  .stat-lbl { color: rgba(255,255,255,0.75); font-size: 0.8rem; margin-top: 0.15rem; }
+
+  .charts-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.25rem;
+    margin-bottom: 1.5rem;
+  }
+  .chart-card {
+    background: white;
+    border-radius: 16px;
+    padding: 1.5rem;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  }
+  .chart-title {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1rem; font-weight: 700;
+    color: #1a237e;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid #f0f4ff;
+    margin-bottom: 1rem;
+  }
+  .chart-wrap { height: 250px; position: relative; }
+
+  .top-table-card {
+    background: white;
+    border-radius: 16px;
+    padding: 1.5rem;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    margin-bottom: 1.5rem;
+  }
+  .top-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+  .top-table th {
+    background: #e8eaf6; color: #1a237e;
+    padding: 0.65rem 1rem; text-align: left;
+    font-weight: 700; border-bottom: 2px solid #c5cae9;
+  }
+  .top-table td { padding: 0.6rem 1rem; border-bottom: 1px solid #f0f0f0; }
+  .top-table tr:hover { background: #f5f7ff; }
+  .rank-badge {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 26px; height: 26px; border-radius: 50%;
+    font-weight: 800; font-size: 0.8rem;
+  }
+  .rank-1 { background: #ffd700; color: #5a3e00; }
+  .rank-2 { background: #c0c0c0; color: #333; }
+  .rank-3 { background: #cd7f32; color: white; }
+  .rank-n { background: #e8eaf6; color: #1a237e; }
+
+  @media (max-width: 768px) {
+    .stats-strip { grid-template-columns: 1fr 1fr; }
+    .charts-grid  { grid-template-columns: 1fr; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="analytics-page">
+  <div class="analytics-wrapper">
+
+    <div class="page-header">
+      <h1>📊 Analytics</h1>
+      <p>College of Computer Studies — Sit-in Monitoring System</p>
+    </div>
+
+    <!-- Stats Strip -->
+    <div class="stats-strip">
+      <div class="stat-card">
+        <div class="stat-icon">👨‍🎓</div>
+        <div>
+          <div class="stat-num">{{ total_students }}</div>
+          <div class="stat-lbl">Total Students</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">🖥️</div>
+        <div>
+          <div class="stat-num">{{ total_sitin }}</div>
+          <div class="stat-lbl">Total Sit-ins</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">✅</div>
+        <div>
+          <div class="stat-num">{{ active_sitin }}</div>
+          <div class="stat-lbl">Currently Active</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">📅</div>
+        <div>
+          <div class="stat-num">{{ total_reservations }}</div>
+          <div class="stat-lbl">Total Reservations</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="charts-grid">
+      <div class="chart-card">
+        <div class="chart-title">🎯 Sit-ins by Purpose</div>
+        <div class="chart-wrap"><canvas id="purposeChart"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">🏫 Sit-ins by Laboratory</div>
+        <div class="chart-wrap"><canvas id="labChart"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">📈 Sit-ins by Status</div>
+        <div class="chart-wrap"><canvas id="statusChart"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">📅 Sit-ins per Day (Last 7 Days)</div>
+        <div class="chart-wrap"><canvas id="dailyChart"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Top Students -->
+    <div class="top-table-card">
+      <div class="chart-title" style="border-bottom: 2px solid #f0f4ff; padding-bottom: 0.75rem; margin-bottom: 1rem;">
+        🏆 Top Students by Sit-in Count
+      </div>
+      <table class="top-table">
+        <thead>
+          <tr>
+            <th>Rank</th><th>Student ID</th><th>Name</th>
+            <th>Course</th><th>Sit-ins</th><th>Points</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for s in top_students %}
+          <tr>
+            <td>
+              <span class="rank-badge {% if loop.index == 1 %}rank-1{% elif loop.index == 2 %}rank-2{% elif loop.index == 3 %}rank-3{% else %}rank-n{% endif %}">
+                {{ loop.index }}
+              </span>
+            </td>
+            <td>{{ s.id }}</td>
+            <td>{{ s.first }} {{ s.last }}</td>
+            <td>{{ s.course }}</td>
+            <td>{{ s.sitin_count }}</td>
+            <td>⭐ {{ s.points if s.points else 0 }}</td>
+          </tr>
+          {% else %}
+          <tr><td colspan="6" style="text-align:center; color:#999; padding:2rem;">No data yet.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  const COLORS = ['#1565c0','#f9c600','#0288d1','#1a237e','#43a047','#e53935','#f57c00','#8e24aa'];
+
+  // Purpose Chart
+  const purposeData = {{ purpose_stats | tojson }};
+  new Chart(document.getElementById('purposeChart'), {
+    type: 'pie',
+    data: {
+      labels: Object.keys(purposeData),
+      datasets: [{ data: Object.values(purposeData), backgroundColor: COLORS, borderWidth: 3, borderColor: '#fff' }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+  });
+
+  // Lab Chart
+  const labData = {{ lab_stats | tojson }};
+  new Chart(document.getElementById('labChart'), {
+    type: 'bar',
+    data: {
+      labels: Object.keys(labData),
+      datasets: [{ label: 'Sit-ins', data: Object.values(labData), backgroundColor: COLORS, borderRadius: 6 }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+  });
+
+  // Status Chart
+  const statusData = {{ status_stats | tojson }};
+  new Chart(document.getElementById('statusChart'), {
+    type: 'doughnut',
+    data: {
+      labels: Object.keys(statusData),
+      datasets: [{ data: Object.values(statusData), backgroundColor: ['#43a047','#1565c0','#f9c600','#e53935'], borderWidth: 3, borderColor: '#fff' }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+  });
+
+  // Daily Chart
+  const dailyData = {{ daily_stats | tojson }};
+  new Chart(document.getElementById('dailyChart'), {
+    type: 'line',
+    data: {
+      labels: Object.keys(dailyData),
+      datasets: [{
+        label: 'Sit-ins',
+        data: Object.values(dailyData),
+        borderColor: '#1565c0',
+        backgroundColor: 'rgba(21,101,192,0.1)',
+        borderWidth: 2, fill: true, tension: 0.4,
+        pointBackgroundColor: '#1565c0'
+      }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+  });
+</script>
+{% endblock %}

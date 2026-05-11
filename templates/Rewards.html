@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+{% block title %}Rewards & Points{% endblock %}
+{% block nav_brand %}College of Computer Studies Admin{% endblock %}
+{% block nav_links %}{% include "admin_nav.html" %}{% endblock %}
+
+{% block content %}
+<style>
+  .rewards-page { padding: 2rem; }
+  .section-title {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1.3rem; font-weight: 700;
+    color: #1a237e;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #e8eaf6;
+    display: flex; align-items: center; gap: 0.5rem;
+  }
+  .card-section {
+    background: white;
+    border-radius: 16px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+    margin-bottom: 2rem;
+  }
+  .points-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  .points-rule {
+    background: linear-gradient(135deg, #e8eaf6, #f5f7ff);
+    border-radius: 12px;
+    padding: 1rem 1.2rem;
+    border-left: 4px solid #1565c0;
+  }
+  .points-rule .pts {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1.8rem; font-weight: 800;
+    color: #f9c600;
+  }
+  .points-rule .desc { font-size: 0.85rem; color: #555; margin-top: 0.2rem; }
+
+  .rewards-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+  .rewards-table th {
+    background: #e8eaf6; color: #1a237e;
+    padding: 0.7rem 1rem; text-align: left;
+    font-weight: 700; border-bottom: 2px solid #c5cae9;
+  }
+  .rewards-table td { padding: 0.65rem 1rem; border-bottom: 1px solid #f0f0f0; vertical-align: middle; }
+  .rewards-table tr:hover { background: #f5f7ff; }
+
+  .rank-badge {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 28px; height: 28px; border-radius: 50%;
+    font-weight: 800; font-size: 0.85rem;
+  }
+  .rank-1 { background: #ffd700; color: #5a3e00; }
+  .rank-2 { background: #c0c0c0; color: #333; }
+  .rank-3 { background: #cd7f32; color: white; }
+  .rank-n { background: #e8eaf6; color: #1a237e; }
+
+  .points-bar-wrap { display: flex; align-items: center; gap: 0.6rem; }
+  .points-bar {
+    flex: 1; height: 8px; background: #e8eaf6;
+    border-radius: 4px; overflow: hidden;
+  }
+  .points-bar-fill { height: 100%; background: linear-gradient(90deg, #f9c600, #f5a800); border-radius: 4px; }
+  .points-val { font-weight: 700; color: #f5a800; min-width: 32px; text-align: right; }
+
+  .manual-form {
+    display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: flex-end;
+    background: #f5f7ff; padding: 1rem; border-radius: 10px; margin-top: 1rem;
+  }
+  .manual-form label { font-size: 0.82rem; font-weight: 600; color: #1a237e; display: block; margin-bottom: 0.3rem; }
+  .manual-form input, .manual-form select {
+    padding: 0.5rem 0.8rem;
+    border: 1px solid #ccc; border-radius: 6px;
+    font-size: 0.875rem; width: 100%;
+  }
+  .manual-form .field { display: flex; flex-direction: column; min-width: 160px; }
+  .btn-give {
+    padding: 0.55rem 1.4rem;
+    background: linear-gradient(135deg, #f9c600, #f5a800);
+    color: #1a237e; border: none; border-radius: 8px;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.95rem; font-weight: 700;
+    cursor: pointer; align-self: flex-end;
+    box-shadow: 0 2px 8px rgba(249,198,0,0.35);
+    transition: all 0.2s;
+  }
+  .btn-give:hover { transform: translateY(-1px); opacity: 0.9; }
+
+  .flash-success {
+    background: #e8f5e9; color: #2e7d32;
+    padding: 0.75rem 1rem; border-radius: 8px;
+    margin-bottom: 1rem; font-weight: 600;
+    border-left: 4px solid #43a047;
+  }
+</style>
+
+<div class="rewards-page">
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for cat, msg in messages %}
+      <div class="flash-{{ cat }}">{{ msg }}</div>
+    {% endfor %}
+  {% endwith %}
+
+  <!-- Points Rules -->
+  <div class="card-section">
+    <div class="section-title">⭐ How Points Are Earned</div>
+    <div class="points-grid">
+      <div class="points-rule">
+        <div class="pts">+1 pt</div>
+        <div class="desc">🖥️ Per completed sit-in session</div>
+      </div>
+      <div class="points-rule">
+        <div class="pts">+2 pts</div>
+        <div class="desc">📅 Per approved reservation</div>
+      </div>
+      <div class="points-rule">
+        <div class="pts">+? pts</div>
+        <div class="desc">🎁 Admin manually awards bonus points</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Manual Points -->
+  <div class="card-section">
+    <div class="section-title">🎁 Manually Award Points</div>
+    <form method="POST" action="/admin/rewards/give">
+      <div class="manual-form">
+        <div class="field">
+          <label>Student ID</label>
+          <input type="text" name="student_id" placeholder="e.g. 2021-00001" required>
+        </div>
+        <div class="field">
+          <label>Points to Add</label>
+          <input type="number" name="points" min="1" max="100" value="5" required>
+        </div>
+        <div class="field" style="min-width: 200px;">
+          <label>Reason</label>
+          <input type="text" name="reason" placeholder="e.g. Perfect attendance" required>
+        </div>
+        <button type="submit" class="btn-give">🌟 Give Points</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Leaderboard -->
+  <div class="card-section">
+    <div class="section-title">🏆 Points Leaderboard</div>
+    <table class="rewards-table">
+      <thead>
+        <tr>
+          <th>Rank</th>
+          <th>Student ID</th>
+          <th>Name</th>
+          <th>Course</th>
+          <th>Sit-ins Done</th>
+          <th>Reservations</th>
+          <th>Points</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for s in leaderboard %}
+        <tr>
+          <td>
+            <span class="rank-badge {% if loop.index == 1 %}rank-1{% elif loop.index == 2 %}rank-2{% elif loop.index == 3 %}rank-3{% else %}rank-n{% endif %}">
+              {{ loop.index }}
+            </span>
+          </td>
+          <td>{{ s.id }}</td>
+          <td>{{ s.first }} {{ s.last }}</td>
+          <td>{{ s.course }}</td>
+          <td>{{ s.sitin_count }}</td>
+          <td>{{ s.reservation_count }}</td>
+          <td>
+            <div class="points-bar-wrap">
+              <div class="points-bar">
+                <div class="points-bar-fill" style="width: {{ [s.points * 2, 100] | min }}%"></div>
+              </div>
+              <span class="points-val">⭐ {{ s.points }}</span>
+            </div>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="7" style="text-align:center; color:#999; padding:2rem;">No students yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+</div>
+{% endblock %}

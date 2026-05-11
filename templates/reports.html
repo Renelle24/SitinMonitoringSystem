@@ -1,298 +1,201 @@
 {% extends "base.html" %}
-{% block title %}Sit-in Reports{% endblock %}
+{% block title %}Reports{% endblock %}
 {% block nav_brand %}College of Computer Studies Admin{% endblock %}
 {% block nav_links %}{% include "admin_nav.html" %}{% endblock %}
 
-{% block extra_head %}
+{% block content %}
 <style>
-  .reports-page {
-    min-height: 100vh;
-    background: linear-gradient(135deg, #1a237e 0%, #1565c0 50%, #0288d1 100%);
-    padding: 2rem;
-    margin: -1.5rem;
-  }
-
-  .reports-wrapper {
-    max-width: 1200px;
-    margin: 0 auto;
-  }
-
-  .page-header {
-    margin-bottom: 1.5rem;
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 1rem;
-  }
-
-  .page-header-text h1 {
+  .reports-page { padding: 2rem; }
+  .section-title {
     font-family: 'Rajdhani', sans-serif;
-    font-size: 2rem;
+    font-size: 1.4rem;
     font-weight: 700;
-    color: #ffffff;
-    margin: 0;
-  }
-
-  .page-header-text p {
-    color: rgba(255,255,255,0.7);
-    font-size: 0.875rem;
-    margin: 0.25rem 0 0;
-  }
-
-  /* Stats row */
-  .stats-row {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 1rem;
-    margin-bottom: 1.25rem;
-  }
-
-  .stat-card {
-    background: rgba(255,255,255,0.12);
-    backdrop-filter: blur(8px);
-    border: 1px solid rgba(255,255,255,0.2);
-    border-radius: 12px;
-    padding: 1rem 1.25rem;
-    display: flex;
-    align-items: center;
-    gap: 0.85rem;
-  }
-
-  .stat-icon { font-size: 1.75rem; flex-shrink: 0; }
-
-  .stat-info .num {
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 1.6rem;
-    font-weight: 800;
-    color: #f9c600;
-    line-height: 1;
-  }
-
-  .stat-info .lbl {
-    color: rgba(255,255,255,0.75);
-    font-size: 0.78rem;
-    margin-top: 0.1rem;
-  }
-
-  /* Filter bar */
-  .filter-bar {
-    background: rgba(255,255,255,0.1);
-    border: 1px solid rgba(255,255,255,0.2);
-    border-radius: 12px;
-    padding: 0.85rem 1.25rem;
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    margin-bottom: 1.25rem;
-    flex-wrap: wrap;
-  }
-
-  .filter-bar label {
-    color: rgba(255,255,255,0.8);
-    font-size: 0.8rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.4px;
-  }
-
-  .filter-select {
-    background: rgba(255,255,255,0.15);
-    border: 1px solid rgba(255,255,255,0.3);
-    border-radius: 7px;
-    color: #ffffff;
-    padding: 0.35rem 0.75rem;
-    font-size: 0.82rem;
-    cursor: pointer;
-    outline: none;
-  }
-
-  .filter-select option { background: #1a237e; color: #fff; }
-
-  /* Table card */
-  .table-card {
-    background: #ffffff;
-    border-radius: 16px;
-    padding: 1.75rem;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.18);
-  }
-
-  table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
-
-  thead tr {
-    background: linear-gradient(135deg, #1a237e, #1565c0);
-    color: white;
-  }
-
-  thead th {
-    padding: 0.85rem 0.9rem;
-    text-align: left;
-    font-size: 0.75rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    white-space: nowrap;
-  }
-
-  thead th:first-child { border-radius: 10px 0 0 10px; }
-  thead th:last-child  { border-radius: 0 10px 10px 0; }
-
-  tbody tr { border-bottom: 1px solid #f0f4ff; transition: background 0.15s; }
-  tbody tr:hover { background: #f5f8ff; }
-  tbody tr:last-child { border-bottom: none; }
-  tbody td { padding: 0.85rem 0.9rem; color: #2d3a5a; vertical-align: middle; }
-
-  .sit-id {
-    font-family: monospace;
-    background: #e8edf8;
     color: #1a237e;
-    font-weight: 700;
-    padding: 0.2rem 0.5rem;
-    border-radius: 5px;
-    font-size: 0.8rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #e8eaf6;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
   }
-
-  .student-name { font-weight: 700; color: #1a237e; }
-  .student-id   { font-size: 0.78rem; color: #78909c; }
-
-  .lab-badge {
-    background: #e3f2fd;
-    color: #1565c0;
-    font-weight: 700;
-    font-size: 0.78rem;
-    padding: 0.2rem 0.55rem;
-    border-radius: 6px;
+  .export-bar {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
   }
-
-  .purpose-chip {
-    background: #f3e5f5;
-    color: #6a1b9a;
-    font-size: 0.78rem;
+  .btn-export {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.55rem 1.2rem;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.9rem;
     font-weight: 600;
-    padding: 0.2rem 0.55rem;
-    border-radius: 6px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.2s;
   }
+  .btn-csv  { background: #43a047; color: white; }
+  .btn-pdf  { background: #e53935; color: white; }
+  .btn-docx { background: #1565c0; color: white; }
+  .btn-export:hover { opacity: 0.88; transform: translateY(-1px); }
+
+  .report-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+  .report-table th {
+    background: #e8eaf6;
+    color: #1a237e;
+    padding: 0.7rem 1rem;
+    text-align: left;
+    font-weight: 700;
+    border-bottom: 2px solid #c5cae9;
+  }
+  .report-table td { padding: 0.65rem 1rem; border-bottom: 1px solid #f0f0f0; }
+  .report-table tr:hover { background: #f5f7ff; }
 
   .badge {
-    font-size: 0.75rem;
-    font-weight: 700;
-    padding: 0.25rem 0.65rem;
-    border-radius: 20px;
-    text-transform: uppercase;
-    letter-spacing: 0.3px;
-    display: inline-block;
+    padding: 0.2rem 0.6rem;
+    border-radius: 4px;
+    font-size: 0.78rem;
+    font-weight: 600;
   }
+  .badge-active   { background: #e8f5e9; color: #2e7d32; }
+  .badge-done     { background: #e3f2fd; color: #1565c0; }
+  .badge-pending  { background: #fff3e0; color: #e65100; }
+  .badge-rejected { background: #ffebee; color: #c62828; }
 
-  .badge-active  { background: #e3f2fd; color: #1565c0; }
-  .badge-done    { background: #e8f5e9; color: #2e7d32; }
-  .badge-pending { background: #fff8e1; color: #f57f17; }
-
-  .no-data { text-align: center; color: #90a4ae; padding: 3rem; font-style: italic; font-size: 0.9rem; }
-
-  .footer-info {
-    font-size: 0.8rem;
-    color: #90a4ae;
-    margin-top: 1rem;
+  .card-section {
+    background: white;
+    border-radius: 16px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+    margin-bottom: 2rem;
+  }
+  .filter-bar {
     display: flex;
-    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
     align-items: center;
   }
-
-  @media (max-width: 900px) {
-    .stats-row { grid-template-columns: repeat(2, 1fr); }
+  .filter-bar select, .filter-bar input {
+    padding: 0.45rem 0.8rem;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 0.875rem;
   }
-
-  @media (max-width: 600px) {
-    .stats-row { grid-template-columns: 1fr; }
-    .reports-page { padding: 1rem; margin: -1rem; }
-    table { font-size: 0.8rem; }
+  .filter-bar button {
+    padding: 0.45rem 1rem;
+    background: #1a237e;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.875rem;
   }
 </style>
-{% endblock %}
 
-{% block content %}
 <div class="reports-page">
-  <div class="reports-wrapper">
 
-    <div class="page-header">
-      <div class="page-header-text">
-        <h1>📋 Sit-in Reports</h1>
-        <p>Complete history of all sit-in sessions</p>
-      </div>
+  <!-- ── SITIN RECORDS REPORT ───────────────────── -->
+  <div class="card-section">
+    <div class="section-title">📋 Sit-in Records Report</div>
+
+    <div class="filter-bar">
+      <form method="GET" action="/admin/reports" style="display:flex; gap:0.75rem; flex-wrap:wrap; align-items:center;">
+        <select name="status">
+          <option value="">All Status</option>
+          <option value="Active"    {% if request.args.get('status')=='Active'    %}selected{% endif %}>Active</option>
+          <option value="Done"      {% if request.args.get('status')=='Done'      %}selected{% endif %}>Done</option>
+          <option value="Pending"   {% if request.args.get('status')=='Pending'   %}selected{% endif %}>Pending</option>
+          <option value="Rejected"  {% if request.args.get('status')=='Rejected'  %}selected{% endif %}>Rejected</option>
+        </select>
+        <select name="purpose">
+          <option value="">All Purpose</option>
+          <option value="C Programming">C Programming</option>
+          <option value="Java">Java</option>
+          <option value="Python">Python</option>
+          <option value="Web Development">Web Development</option>
+          <option value="Database">Database</option>
+          <option value="Other">Other</option>
+        </select>
+        <input type="date" name="date_from" value="{{ request.args.get('date_from','') }}" placeholder="From">
+        <input type="date" name="date_to"   value="{{ request.args.get('date_to','') }}"   placeholder="To">
+        <button type="submit">🔍 Filter</button>
+      </form>
     </div>
 
-    <!-- Stats -->
-    <div class="stats-row">
-      <div class="stat-card">
-        <div class="stat-icon">📊</div>
-        <div class="stat-info">
-          <div class="num">{{ records|length }}</div>
-          <div class="lbl">Total Records</div>
-        </div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon">✅</div>
-        <div class="stat-info">
-          <div class="num">{{ records | selectattr('status', 'equalto', 'Done') | list | length }}</div>
-          <div class="lbl">Completed</div>
-        </div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon">🔵</div>
-        <div class="stat-info">
-          <div class="num">{{ records | selectattr('status', 'equalto', 'Active') | list | length }}</div>
-          <div class="lbl">Active</div>
-        </div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon">⏳</div>
-        <div class="stat-info">
-          <div class="num">{{ records | selectattr('status', 'equalto', 'Pending') | list | length }}</div>
-          <div class="lbl">Pending</div>
-        </div>
-      </div>
+    <div class="export-bar">
+      <a class="btn-export btn-csv"  href="/admin/reports/export/sitin/csv?{{ request.query_string.decode() }}">📄 Export CSV</a>
+      <a class="btn-export btn-pdf"  href="/admin/reports/export/sitin/pdf?{{ request.query_string.decode() }}">📕 Export PDF</a>
+      <a class="btn-export btn-docx" href="/admin/reports/export/sitin/docx?{{ request.query_string.decode() }}">📘 Export DOCX</a>
     </div>
 
-    <!-- Table -->
-    <div class="table-card">
-      <table>
-        <thead>
-          <tr>
-            <th>Sit ID</th>
-            <th>Student</th>
-            <th>Purpose</th>
-            <th>Lab</th>
-            <th>Date & Time</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for r in records %}
-          <tr>
-            <td><span class="sit-id">{{ r.sit_id }}</span></td>
-            <td>
-              <div class="student-name">{{ r.name }}</div>
-              <div class="student-id">ID: {{ r.id }}</div>
-            </td>
-            <td><span class="purpose-chip">{{ r.purpose }}</span></td>
-            <td><span class="lab-badge">Room {{ r.lab }}</span></td>
-            <td style="white-space:nowrap;font-size:0.82rem;">{{ r.date }}</td>
-            <td>
-              <span class="badge {{ 'badge-active' if r.status == 'Active' else ('badge-pending' if r.status == 'Pending' else 'badge-done') }}">
-                {{ r.status }}
-              </span>
-            </td>
-          </tr>
-          {% else %}
-          <tr><td colspan="6" class="no-data">No sit-in records yet.</td></tr>
-          {% endfor %}
-        </tbody>
-      </table>
-      <div class="footer-info">
-        <span>Showing {{ records|length }} record(s)</span>
-      </div>
-    </div>
-
+    <table class="report-table">
+      <thead>
+        <tr>
+          <th>#</th><th>Sit ID</th><th>Student ID</th><th>Name</th>
+          <th>Purpose</th><th>Lab</th><th>Date</th><th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in sitin_records %}
+        <tr>
+          <td>{{ loop.index }}</td>
+          <td>{{ r.sit_id }}</td>
+          <td>{{ r.student_id }}</td>
+          <td>{{ r.name }}</td>
+          <td>{{ r.purpose }}</td>
+          <td>{{ r.lab }}</td>
+          <td>{{ r.date }}</td>
+          <td>
+            <span class="badge badge-{{ r.status|lower }}">{{ r.status }}</span>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="8" style="text-align:center; color:#999; padding:2rem;">No records found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
   </div>
+
+  <!-- ── STUDENTS LIST REPORT ───────────────────── -->
+  <div class="card-section">
+    <div class="section-title">👨‍🎓 Students List Report</div>
+
+    <div class="export-bar">
+      <a class="btn-export btn-csv"  href="/admin/reports/export/students/csv">📄 Export CSV</a>
+      <a class="btn-export btn-pdf"  href="/admin/reports/export/students/pdf">📕 Export PDF</a>
+      <a class="btn-export btn-docx" href="/admin/reports/export/students/docx">📘 Export DOCX</a>
+    </div>
+
+    <table class="report-table">
+      <thead>
+        <tr>
+          <th>#</th><th>ID Number</th><th>Last Name</th><th>First Name</th>
+          <th>Course</th><th>Year</th><th>Email</th><th>Sessions Left</th><th>Points</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for s in students %}
+        <tr>
+          <td>{{ loop.index }}</td>
+          <td>{{ s.id }}</td>
+          <td>{{ s.last }}</td>
+          <td>{{ s.first }}</td>
+          <td>{{ s.course }}</td>
+          <td>{{ s.year }}</td>
+          <td>{{ s.email }}</td>
+          <td>{{ s.session }}</td>
+          <td>⭐ {{ s.points if s.points else 0 }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="9" style="text-align:center; color:#999; padding:2rem;">No students found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
 </div>
 {% endblock %}
