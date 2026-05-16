@@ -1,10 +1,18 @@
 {% extends "base.html" %}
 {% block title %}Student Dashboard{% endblock %}
-{% block nav_links %}
-  <a href="{{ url_for('student_dashboard') }}" class="active">Home</a>
-  <a href="#">Community ▾</a>
-  <a href="#">About</a>
+{% block nav_brand %}College of Computer Studies Sit-in Monitoring System{% endblock %}
+
+{% block nav_logout %}
   <a href="{{ url_for('logout') }}" class="btn-logout">Log out</a>
+{% endblock %}
+
+{% block nav_links %}
+  <a href="{{ url_for('student_dashboard') }}" class="{{ 'active' if request.endpoint == 'student_dashboard' }}">🏠 Home</a>
+  <a href="#sitin-section">🖥️ Sit-in</a>
+  <a href="#reservation-section">📅 Reservation</a>
+  <a href="#lab-rules-section">📋 Lab Rules</a>
+  <a href="#rewards-section">⭐ Rewards</a>
+  <a href="#history-section">📂 History</a>
 {% endblock %}
 
 {% block extra_head %}
@@ -15,409 +23,119 @@
     padding: 1.75rem;
     margin: -1.5rem;
   }
+  .dashboard-wrapper { max-width: 1100px; margin: 0 auto; display: flex; flex-direction: column; gap: 1.25rem; }
 
-  .dashboard-wrapper {
-    max-width: 1100px;
-    margin: 0 auto;
-    display: flex;
-    flex-direction: column;
-    gap: 1.25rem;
-  }
-
-  /* Welcome Banner */
   .welcome-banner {
-    background: rgba(255,255,255,0.12);
-    backdrop-filter: blur(8px);
-    border: 1px solid rgba(255,255,255,0.2);
-    border-radius: 16px;
-    padding: 1.5rem 2rem;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
+    background: rgba(255,255,255,0.12); backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,0.2); border-radius: 16px;
+    padding: 1.5rem 2rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem;
   }
+  .welcome-text h2 { font-family: 'Rajdhani', sans-serif; font-size: 1.6rem; font-weight: 700; color: #fff; margin: 0 0 0.2rem; }
+  .welcome-text p  { color: rgba(255,255,255,0.75); font-size: 0.85rem; margin: 0; }
 
-  .welcome-text h2 {
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 1.6rem;
-    font-weight: 700;
-    color: #ffffff;
-    margin: 0 0 0.2rem;
-  }
-
-  .welcome-text p {
-    color: rgba(255,255,255,0.75);
-    font-size: 0.85rem;
-    margin: 0;
-  }
-
-  .session-badge {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-  }
-
-  .session-badge-label {
-    text-align: right;
-    color: rgba(255,255,255,0.75);
-    font-size: 0.8rem;
-    line-height: 1.4;
-  }
-
+  .session-badge { display: flex; align-items: center; gap: 1rem; }
+  .session-badge-label { text-align: right; color: rgba(255,255,255,0.75); font-size: 0.8rem; line-height: 1.4; }
   .session-circle {
-    background: linear-gradient(135deg, #f9c600, #f5a800);
-    color: #1a237e;
-    border-radius: 50%;
-    width: 68px;
-    height: 68px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    font-family: 'Rajdhani', sans-serif;
-    box-shadow: 0 4px 14px rgba(249,198,0,0.45);
-    flex-shrink: 0;
+    background: linear-gradient(135deg, #f9c600, #f5a800); color: #1a237e;
+    border-radius: 50%; width: 68px; height: 68px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    font-family: 'Rajdhani', sans-serif; box-shadow: 0 4px 14px rgba(249,198,0,0.45); flex-shrink: 0;
   }
-
   .session-circle .num { font-size: 1.7rem; font-weight: 800; line-height: 1; }
   .session-circle .lbl { font-size: 0.55rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
 
-  /* Cards */
-  .card {
-    background: #ffffff;
-    border-radius: 16px;
-    padding: 1.5rem;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
-    border: none;
-  }
-
+  .card { background: #fff; border-radius: 16px; padding: 1.5rem; box-shadow: 0 8px 24px rgba(0,0,0,0.12); border: none; }
   .card-title {
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 1rem;
-    font-weight: 700;
-    color: #1a237e;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    padding-bottom: 0.75rem;
-    border-bottom: 2px solid #f0f4ff;
-    margin-bottom: 1rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
+    font-family: 'Rajdhani', sans-serif; font-size: 1rem; font-weight: 700;
+    color: #1a237e; text-transform: uppercase; letter-spacing: 0.5px;
+    padding-bottom: 0.75rem; border-bottom: 2px solid #f0f4ff;
+    margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;
   }
-
-  .card-title.gold-title { color: #f5a800; border-bottom-color: #fff8e1; }
+  .card-title.gold-title  { color: #f5a800; border-bottom-color: #fff8e1; }
   .card-title.green-title { color: #2e7d32; border-bottom-color: #e8f5e9; }
-  .card-title.red-title { color: #c62828; border-bottom-color: #ffebee; }
+  .card-title.red-title   { color: #c62828; border-bottom-color: #ffebee; }
+  .card-title.blue-title  { color: #1565c0; border-bottom-color: #e3f2fd; }
 
-  /* Two-col grid */
-  .grid-2 {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1.25rem;
-  }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
 
-  /* Profile rows */
-  .profile-row {
-    display: flex;
-    gap: 0.75rem;
-    padding: 0.5rem 0;
-    border-bottom: 1px solid #f5f7ff;
-    font-size: 0.875rem;
-    align-items: center;
-  }
-
+  .profile-row { display: flex; gap: 0.75rem; padding: 0.5rem 0; border-bottom: 1px solid #f5f7ff; font-size: 0.875rem; align-items: center; }
   .profile-row:last-child { border-bottom: none; }
+  .profile-row .lbl { color: #90a4ae; font-weight: 700; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.4px; min-width: 95px; }
+  .profile-row .val { color: #1a237e; font-weight: 600; }
 
-  .profile-row .lbl {
-    color: #90a4ae;
-    font-weight: 700;
-    font-size: 0.72rem;
-    text-transform: uppercase;
-    letter-spacing: 0.4px;
-    min-width: 95px;
-  }
-
-  .profile-row .val {
-    color: #1a237e;
-    font-weight: 600;
-  }
-
-  /* Announcements */
-  .ann-item {
-    border-bottom: 1px solid #f0f4ff;
-    padding: 0.65rem 0;
-  }
-
+  .ann-item { border-bottom: 1px solid #f0f4ff; padding: 0.65rem 0; }
   .ann-item:last-child { border-bottom: none; }
+  .ann-meta { font-weight: 700; color: #1a237e; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.3px; }
+  .ann-body { color: #1565c0; font-size: 0.82rem; margin-top: 0.25rem; line-height: 1.5; }
 
-  .ann-meta {
-    font-weight: 700;
-    color: #1a237e;
-    font-size: 0.78rem;
-    text-transform: uppercase;
-    letter-spacing: 0.3px;
-  }
-
-  .ann-body {
-    color: #1565c0;
-    font-size: 0.82rem;
-    margin-top: 0.25rem;
-    line-height: 1.5;
-  }
-
-  /* Form elements */
-  .form-label {
-    display: block;
-    font-size: 0.72rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.4px;
-    color: #546e7a;
-    margin-bottom: 0.35rem;
-  }
-
-  .form-control {
-    width: 100%;
-    padding: 0.6rem 0.85rem;
-    border: 1.5px solid #dde3f8;
-    border-radius: 9px;
-    font-size: 0.875rem;
-    color: #1a237e;
-    background: #f8faff;
-    transition: border-color 0.2s, box-shadow 0.2s;
-    box-sizing: border-box;
-  }
-
-  .form-control:focus {
-    outline: none;
-    border-color: #1565c0;
-    box-shadow: 0 0 0 3px rgba(21,101,192,0.12);
-    background: #fff;
-  }
-
+  .form-label { display: block; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; color: #546e7a; margin-bottom: 0.35rem; }
+  .form-control { width: 100%; padding: 0.6rem 0.85rem; border: 1.5px solid #dde3f8; border-radius: 9px; font-size: 0.875rem; color: #1a237e; background: #f8faff; transition: border-color 0.2s, box-shadow 0.2s; box-sizing: border-box; }
+  .form-control:focus { outline: none; border-color: #1565c0; box-shadow: 0 0 0 3px rgba(21,101,192,0.12); background: #fff; }
   .form-group { margin-bottom: 0.75rem; }
 
-  /* Buttons */
   .btn-sitin {
-    margin-top: 1rem;
-    background: linear-gradient(135deg, #f9c600, #f5a800);
-    color: #1a237e;
-    border: none;
-    border-radius: 9px;
-    padding: 0.65rem 1.75rem;
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 1rem;
-    font-weight: 700;
-    cursor: pointer;
-    box-shadow: 0 4px 12px rgba(249,198,0,0.4);
-    transition: all 0.2s;
-    letter-spacing: 0.3px;
+    margin-top: 1rem; background: linear-gradient(135deg, #f9c600, #f5a800);
+    color: #1a237e; border: none; border-radius: 9px; padding: 0.65rem 1.75rem;
+    font-family: 'Rajdhani', sans-serif; font-size: 1rem; font-weight: 700;
+    cursor: pointer; box-shadow: 0 4px 12px rgba(249,198,0,0.4); transition: all 0.2s;
   }
-
-  .btn-sitin:hover {
-    background: linear-gradient(135deg, #ffd700, #f9c600);
-    transform: translateY(-1px);
-    box-shadow: 0 6px 16px rgba(249,198,0,0.5);
-  }
-
-  .btn-sitin:disabled {
-    background: #e0e0e0;
-    color: #9e9e9e;
-    box-shadow: none;
-    cursor: not-allowed;
-    transform: none;
-  }
+  .btn-sitin:hover { background: linear-gradient(135deg, #ffd700, #f9c600); transform: translateY(-1px); }
+  .btn-sitin:disabled { background: #e0e0e0; color: #9e9e9e; box-shadow: none; cursor: not-allowed; transform: none; }
 
   .btn-green {
-    background: linear-gradient(135deg, #2e7d32, #43a047);
-    color: white;
-    border: none;
-    border-radius: 9px;
-    padding: 0.65rem 1.75rem;
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 1rem;
-    font-weight: 700;
-    cursor: pointer;
-    box-shadow: 0 4px 12px rgba(46,125,50,0.3);
-    transition: all 0.2s;
-    margin-top: 1rem;
+    background: linear-gradient(135deg, #2e7d32, #43a047); color: white;
+    border: none; border-radius: 9px; padding: 0.65rem 1.75rem;
+    font-family: 'Rajdhani', sans-serif; font-size: 1rem; font-weight: 700;
+    cursor: pointer; box-shadow: 0 4px 12px rgba(46,125,50,0.3); transition: all 0.2s; margin-top: 1rem;
   }
+  .btn-green:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(46,125,50,0.4); }
 
-  .btn-green:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 6px 16px rgba(46,125,50,0.4);
-  }
+  .no-session-msg { color: #e53935; font-size: 0.82rem; margin-left: 0.75rem; font-weight: 600; }
 
-  .no-session-msg {
-    color: #e53935;
-    font-size: 0.82rem;
-    margin-left: 0.75rem;
-    font-weight: 600;
-  }
-
-  /* Table */
   table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
-
-  thead tr {
-    background: linear-gradient(135deg, #1a237e, #1565c0);
-    color: white;
-  }
-
-  thead th {
-    padding: 0.75rem 1rem;
-    text-align: left;
-    font-size: 0.75rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-
+  thead tr { background: linear-gradient(135deg, #1a237e, #1565c0); color: white; }
+  thead th { padding: 0.75rem 1rem; text-align: left; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
   thead th:first-child { border-radius: 8px 0 0 8px; }
   thead th:last-child  { border-radius: 0 8px 8px 0; }
-
-  tbody tr {
-    border-bottom: 1px solid #f0f4ff;
-    transition: background 0.15s;
-  }
-
+  tbody tr { border-bottom: 1px solid #f0f4ff; transition: background 0.15s; }
   tbody tr:hover { background: #f5f8ff; }
   tbody tr:last-child { border-bottom: none; }
-
   tbody td { padding: 0.75rem 1rem; color: #2d3a5a; vertical-align: middle; }
-
   .no-data { text-align: center; color: #90a4ae; padding: 2rem; font-style: italic; }
 
-  /* Status badges */
-  .badge {
-    display: inline-block;
-    padding: 0.2rem 0.65rem;
-    border-radius: 20px;
-    font-size: 0.75rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.3px;
-  }
-
+  .badge { display: inline-block; padding: 0.2rem 0.65rem; border-radius: 20px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; }
   .badge-active   { background: #e3f2fd; color: #1565c0; }
   .badge-pending  { background: #fff8e1; color: #f57f17; }
   .badge-done     { background: #e8f5e9; color: #2e7d32; }
   .badge-approved { background: #e8f5e9; color: #2e7d32; }
   .badge-rejected { background: #ffebee; color: #c62828; }
 
-  /* Notifications */
-  .notif-item {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.75rem;
-    padding: 0.75rem 0;
-    border-bottom: 1px solid #f0f4ff;
-  }
-
+  .notif-item { display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.75rem 0; border-bottom: 1px solid #f0f4ff; }
   .notif-item:last-child { border-bottom: none; }
-
-  .notif-icon {
-    font-size: 1.3rem;
-    flex-shrink: 0;
-    margin-top: 0.1rem;
-  }
-
-  .notif-content .notif-title {
-    font-weight: 700;
-    font-size: 0.85rem;
-    color: #1a237e;
-  }
-
-  .notif-content .notif-body {
-    font-size: 0.8rem;
-    color: #546e7a;
-    margin-top: 0.15rem;
-  }
-
-  .notif-content .notif-time {
-    font-size: 0.72rem;
-    color: #90a4ae;
-    margin-top: 0.2rem;
-  }
-
+  .notif-icon { font-size: 1.3rem; flex-shrink: 0; margin-top: 0.1rem; }
+  .notif-content .notif-title { font-weight: 700; font-size: 0.85rem; color: #1a237e; }
+  .notif-content .notif-body  { font-size: 0.8rem; color: #546e7a; margin-top: 0.15rem; }
+  .notif-content .notif-time  { font-size: 0.72rem; color: #90a4ae; margin-top: 0.2rem; }
   .notif-unread { background: #f0f4ff; border-radius: 10px; padding: 0.75rem; margin-bottom: 0.25rem; }
 
-  /* Rewards */
-  .rewards-summary {
-    display: flex;
-    align-items: center;
-    gap: 1.5rem;
-    margin-bottom: 1rem;
-    padding: 1rem;
-    background: linear-gradient(135deg, #fff8e1, #fffde7);
-    border-radius: 12px;
-    border: 1px solid #ffe082;
-  }
-
-  .rewards-points {
-    text-align: center;
-  }
-
-  .rewards-points .pts-num {
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 2.5rem;
-    font-weight: 800;
-    color: #f57f17;
-    line-height: 1;
-  }
-
-  .rewards-points .pts-lbl {
-    font-size: 0.72rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    color: #f9a825;
-    letter-spacing: 0.5px;
-  }
-
-  .rewards-info {
-    flex: 1;
-  }
-
-  .rewards-info .tier {
-    font-size: 1rem;
-    font-weight: 700;
-    color: #e65100;
-    margin-bottom: 0.3rem;
-  }
-
-  .progress-bar-wrap {
-    background: #ffe082;
-    border-radius: 20px;
-    height: 10px;
-    overflow: hidden;
-    margin-bottom: 0.3rem;
-  }
-
-  .progress-bar-fill {
-    height: 100%;
-    background: linear-gradient(90deg, #f9c600, #f57f17);
-    border-radius: 20px;
-    transition: width 0.4s;
-  }
-
-  .progress-label {
-    font-size: 0.75rem;
-    color: #f57f17;
-    font-weight: 600;
-  }
-
-  .reward-history-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0.5rem 0;
-    border-bottom: 1px solid #fff8e1;
-    font-size: 0.85rem;
-  }
-
+  .rewards-summary { display: flex; align-items: center; gap: 1.5rem; margin-bottom: 1rem; padding: 1rem; background: linear-gradient(135deg, #fff8e1, #fffde7); border-radius: 12px; border: 1px solid #ffe082; }
+  .rewards-points { text-align: center; }
+  .rewards-points .pts-num { font-family: 'Rajdhani', sans-serif; font-size: 2.5rem; font-weight: 800; color: #f57f17; line-height: 1; }
+  .rewards-points .pts-lbl { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: #f9a825; letter-spacing: 0.5px; }
+  .rewards-info { flex: 1; }
+  .rewards-info .tier { font-size: 1rem; font-weight: 700; color: #e65100; margin-bottom: 0.3rem; }
+  .progress-bar-wrap { background: #ffe082; border-radius: 20px; height: 10px; overflow: hidden; margin-bottom: 0.3rem; }
+  .progress-bar-fill { height: 100%; background: linear-gradient(90deg, #f9c600, #f57f17); border-radius: 20px; transition: width 0.4s; }
+  .progress-label { font-size: 0.75rem; color: #f57f17; font-weight: 600; }
+  .reward-history-item { display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0; border-bottom: 1px solid #fff8e1; font-size: 0.85rem; }
   .reward-history-item:last-child { border-bottom: none; }
   .reward-pts-gain { color: #2e7d32; font-weight: 700; }
-  .reward-pts-lose { color: #c62828; font-weight: 700; }
+
+  /* Lab Rules */
+  .rules-list { list-style: none; padding: 0; margin: 0; }
+  .rules-list li { display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.6rem 0; border-bottom: 1px solid #f0f4ff; font-size: 0.875rem; color: #2d3a5a; line-height: 1.5; }
+  .rules-list li:last-child { border-bottom: none; }
+  .rules-list li .rule-num { background: #1a237e; color: white; border-radius: 50%; width: 22px; height: 22px; min-width: 22px; display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 700; flex-shrink: 0; margin-top: 1px; }
 
   @media (max-width: 680px) {
     .grid-2 { grid-template-columns: 1fr; }
@@ -448,8 +166,6 @@
 
     <!-- Profile + Announcements -->
     <div class="grid-2">
-
-      <!-- Profile -->
       <div class="card">
         <div class="card-title">👤 My Profile</div>
         <div class="profile-row"><span class="lbl">ID Number</span><span class="val">{{ student.id }}</span></div>
@@ -457,15 +173,12 @@
         <div class="profile-row"><span class="lbl">Course</span><span class="val">{{ student.course }}</span></div>
         <div class="profile-row">
           <span class="lbl">Year Level</span>
-          <span class="val">
-            {{ student.year }}{{ 'st' if student.year==1 else ('nd' if student.year==2 else ('rd' if student.year==3 else 'th')) }} Year
-          </span>
+          <span class="val">{{ student.year }}{{ 'st' if student.year==1 else ('nd' if student.year==2 else ('rd' if student.year==3 else 'th')) }} Year</span>
         </div>
         <div class="profile-row"><span class="lbl">Email</span><span class="val">{{ student.email or '—' }}</span></div>
         <div class="profile-row"><span class="lbl">Address</span><span class="val">{{ student.address or '—' }}</span></div>
       </div>
 
-      <!-- Announcements -->
       <div class="card">
         <div class="card-title gold-title">📢 Announcements</div>
         {% for ann in announcements %}
@@ -477,27 +190,20 @@
         <p style="color:#90a4ae;font-size:0.85rem;text-align:center;padding:1rem 0;">No announcements yet.</p>
         {% endfor %}
       </div>
-
     </div>
 
     <!-- Notifications + Rewards -->
     <div class="grid-2">
-
-      <!-- Notifications -->
       <div class="card">
         <div class="card-title red-title">🔔 Notifications
           {% if notifications %}
-            <span style="background:#e53935;color:white;border-radius:20px;padding:0.1rem 0.5rem;font-size:0.72rem;margin-left:auto;">
-              {{ notifications|length }}
-            </span>
+            <span style="background:#e53935;color:white;border-radius:20px;padding:0.1rem 0.5rem;font-size:0.72rem;margin-left:auto;">{{ notifications|length }}</span>
           {% endif %}
         </div>
         {% if notifications %}
           {% for n in notifications %}
           <div class="notif-item {% if not n.is_read %}notif-unread{% endif %}">
-            <div class="notif-icon">
-              {{ '✅' if n.type == 'approved' else ('❌' if n.type == 'rejected' else ('📅' if n.type == 'reservation' else '📌')) }}
-            </div>
+            <div class="notif-icon">{{ '✅' if n.type == 'approved' else ('❌' if n.type == 'rejected' else '📌') }}</div>
             <div class="notif-content">
               <div class="notif-title">{{ n.title }}</div>
               <div class="notif-body">{{ n.message }}</div>
@@ -510,58 +216,36 @@
         {% endif %}
       </div>
 
-      <!-- Reward Points -->
-      <div class="card">
+      <div class="card" id="rewards-section">
         <div class="card-title green-title">🏆 Reward Points</div>
-        {% set points = records|selectattr('status', 'equalto', 'Done')|list|length * 10 %}
+        {% set points = student.points if student.points else 0 %}
         {% set tier = 'Bronze' if points < 50 else ('Silver' if points < 100 else ('Gold' if points < 200 else 'Platinum')) %}
         {% set next_tier_pts = 50 if points < 50 else (100 if points < 100 else (200 if points < 200 else 200)) %}
         {% set progress = ((points / next_tier_pts) * 100)|int %}
-
         <div class="rewards-summary">
           <div class="rewards-points">
             <div class="pts-num">{{ points }}</div>
             <div class="pts-lbl">Points</div>
           </div>
           <div class="rewards-info">
-            <div class="tier">
-              {{ '🥉' if tier == 'Bronze' else ('🥈' if tier == 'Silver' else ('🥇' if tier == 'Gold' else '💎')) }}
-              {{ tier }} Tier
-            </div>
+            <div class="tier">{{ '🥉' if tier == 'Bronze' else ('🥈' if tier == 'Silver' else ('🥇' if tier == 'Gold' else '💎')) }} {{ tier }} Tier</div>
             <div class="progress-bar-wrap">
               <div class="progress-bar-fill" style="width: {{ [progress, 100]|min }}%;"></div>
             </div>
             <div class="progress-label">
-              {% if tier != 'Platinum' %}
-                {{ points }} / {{ next_tier_pts }} pts to next tier
-              {% else %}
-                Maximum tier reached! 🎉
-              {% endif %}
+              {% if tier != 'Platinum' %}{{ points }} / {{ next_tier_pts }} pts to next tier{% else %}Maximum tier reached! 🎉{% endif %}
             </div>
           </div>
         </div>
-
-        <div style="font-size:0.78rem;font-weight:700;color:#546e7a;text-transform:uppercase;letter-spacing:0.4px;margin-bottom:0.5rem;">
-          How to earn points
-        </div>
-        <div class="reward-history-item">
-          <span>✅ Completed sit-in session</span>
-          <span class="reward-pts-gain">+10 pts</span>
-        </div>
-        <div class="reward-history-item">
-          <span>📅 Approved reservation</span>
-          <span class="reward-pts-gain">+5 pts</span>
-        </div>
-        <div class="reward-history-item">
-          <span>❌ No-show / Rejected</span>
-          <span class="reward-pts-lose">-5 pts</span>
-        </div>
+        <div style="font-size:0.78rem;font-weight:700;color:#546e7a;text-transform:uppercase;letter-spacing:0.4px;margin-bottom:0.5rem;">How to earn points</div>
+        <div class="reward-history-item"><span>✅ Completed sit-in session</span><span class="reward-pts-gain">+1 pt</span></div>
+        <div class="reward-history-item"><span>📅 Approved reservation</span><span class="reward-pts-gain">+2 pts</span></div>
+        <div class="reward-history-item"><span>🎁 Admin bonus award</span><span class="reward-pts-gain">+? pts</span></div>
       </div>
-
     </div>
 
     <!-- Request Sit-in -->
-    <div class="card">
+    <div class="card" id="sitin-section">
       <div class="card-title">💻 Request Sit-in</div>
       <form method="POST" action="{{ url_for('student_sitin_request') }}">
         <div class="grid-2" style="gap:0.85rem;">
@@ -588,18 +272,14 @@
           </div>
         </div>
         <div style="display:flex;align-items:center;flex-wrap:wrap;gap:0.5rem;">
-          <button type="submit" class="btn-sitin" {% if student.session == 0 %}disabled{% endif %}>
-            🖥️ Submit Sit-in Request
-          </button>
-          {% if student.session == 0 %}
-            <span class="no-session-msg">⚠️ No remaining sessions.</span>
-          {% endif %}
+          <button type="submit" class="btn-sitin" {% if student.session == 0 %}disabled{% endif %}>🖥️ Submit Sit-in Request</button>
+          {% if student.session == 0 %}<span class="no-session-msg">⚠️ No remaining sessions.</span>{% endif %}
         </div>
       </form>
     </div>
 
     <!-- Reserve a Lab -->
-    <div class="card">
+    <div class="card" id="reservation-section">
       <div class="card-title green-title">📅 Reserve a Laboratory</div>
       <form method="POST" action="/student/reservation/add">
         <div class="grid-2" style="gap:0.85rem;">
@@ -635,35 +315,16 @@
         </div>
         <button type="submit" class="btn-green">📅 Submit Reservation</button>
       </form>
-
-      <!-- My Reservations Table -->
       {% if my_reservations %}
       <div style="margin-top:1.25rem;">
-        <div style="font-size:0.78rem;font-weight:700;color:#546e7a;text-transform:uppercase;letter-spacing:0.4px;margin-bottom:0.5rem;">
-          My Reservations
-        </div>
+        <div style="font-size:0.78rem;font-weight:700;color:#546e7a;text-transform:uppercase;letter-spacing:0.4px;margin-bottom:0.5rem;">My Reservations</div>
         <table>
-          <thead>
-            <tr>
-              <th>Lab</th>
-              <th>Purpose</th>
-              <th>Date</th>
-              <th>Time</th>
-              <th>Status</th>
-            </tr>
-          </thead>
+          <thead><tr><th>Lab</th><th>Purpose</th><th>Date</th><th>Time</th><th>Status</th></tr></thead>
           <tbody>
             {% for r in my_reservations %}
             <tr>
-              <td>{{ r.lab }}</td>
-              <td>{{ r.purpose }}</td>
-              <td>{{ r.date }}</td>
-              <td>{{ r.time }}</td>
-              <td>
-                <span class="badge {{ 'badge-pending' if r.status == 'Pending' else ('badge-approved' if r.status == 'Approved' else 'badge-rejected') }}">
-                  {{ r.status }}
-                </span>
-              </td>
+              <td>{{ r.lab }}</td><td>{{ r.purpose }}</td><td>{{ r.date }}</td><td>{{ r.time }}</td>
+              <td><span class="badge {{ 'badge-pending' if r.status == 'Pending' else ('badge-approved' if r.status == 'Approved' else 'badge-rejected') }}">{{ r.status }}</span></td>
             </tr>
             {% endfor %}
           </tbody>
@@ -672,19 +333,28 @@
       {% endif %}
     </div>
 
+    <!-- Lab Rules -->
+    <div class="card" id="lab-rules-section">
+      <div class="card-title blue-title">📋 Laboratory Rules & Regulations</div>
+      <ul class="rules-list">
+        <li><span class="rule-num">1</span>Students must present their school ID before using the laboratory.</li>
+        <li><span class="rule-num">2</span>Food, drinks, and other beverages are strictly prohibited inside the laboratory.</li>
+        <li><span class="rule-num">3</span>Students must sit on their assigned computers only.</li>
+        <li><span class="rule-num">4</span>Accessing inappropriate websites, social media, or online gaming is not allowed during sit-in sessions.</li>
+        <li><span class="rule-num">5</span>Students must keep the laboratory clean and orderly at all times.</li>
+        <li><span class="rule-num">6</span>Any form of vandalism or damage to laboratory equipment will be penalized.</li>
+        <li><span class="rule-num">7</span>Students must log out of all accounts and shut down computers properly before leaving.</li>
+        <li><span class="rule-num">8</span>Loud talking, noise, and any disruptive behavior are not permitted.</li>
+        <li><span class="rule-num">9</span>Unauthorized installation of software is strictly prohibited.</li>
+        <li><span class="rule-num">10</span>Students must follow the instructions of the laboratory administrator at all times.</li>
+      </ul>
+    </div>
+
     <!-- Sit-in History -->
-    <div class="card">
-      <div class="card-title">📋 My Sit-in History</div>
+    <div class="card" id="history-section">
+      <div class="card-title">📂 My Sit-in History</div>
       <table>
-        <thead>
-          <tr>
-            <th>Sit ID</th>
-            <th>Date</th>
-            <th>Purpose</th>
-            <th>Lab</th>
-            <th>Status</th>
-          </tr>
-        </thead>
+        <thead><tr><th>Sit ID</th><th>Date</th><th>Purpose</th><th>Lab</th><th>Status</th></tr></thead>
         <tbody>
           {% for r in records %}
           <tr>
@@ -692,11 +362,7 @@
             <td>{{ r.date }}</td>
             <td>{{ r.purpose }}</td>
             <td>Room {{ r.lab }}</td>
-            <td>
-              <span class="badge {{ 'badge-active' if r.status == 'Active' else ('badge-pending' if r.status == 'Pending' else 'badge-done') }}">
-                {{ r.status }}
-              </span>
-            </td>
+            <td><span class="badge {{ 'badge-active' if r.status == 'Active' else ('badge-pending' if r.status == 'Pending' else 'badge-done') }}">{{ r.status }}</span></td>
           </tr>
           {% else %}
           <tr><td colspan="5" class="no-data">No sit-in history yet.</td></tr>
