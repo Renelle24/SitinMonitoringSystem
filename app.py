@@ -4,6 +4,8 @@ from datetime import datetime, timedelta
 import json
 import csv
 import io
+import base64
+from PIL import Image
 
 app = Flask(__name__)
 app.secret_key = 'ccs-sitin-secret-key-2026'
@@ -15,6 +17,7 @@ app.config['MYSQL_PASSWORD'] = ''
 app.config['MYSQL_DB'] = 'sitin_db'
 app.config['MYSQL_PORT'] = 3306
 app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max upload
 
 mysql = MySQL(app)
 
@@ -40,6 +43,21 @@ def next_sit_id():
     row = cur.fetchone()
     cur.close()
     return f"SIT-{(row['cnt'] + 1):04d}"
+
+def compress_photo(file_storage, max_size=(200, 200), quality=75):
+    """Compress and resize an uploaded image, return base64 data URI."""
+    try:
+        img = Image.open(file_storage)
+        # Convert RGBA or palette to RGB so JPEG works
+        if img.mode in ('RGBA', 'P'):
+            img = img.convert('RGB')
+        img.thumbnail(max_size, Image.LANCZOS)
+        buffer = io.BytesIO()
+        img.save(buffer, format='JPEG', quality=quality, optimize=True)
+        encoded = base64.b64encode(buffer.getvalue()).decode('utf-8')
+        return f"data:image/jpeg;base64,{encoded}"
+    except Exception as e:
+        return None
 
 # ─── Admin decorator ───────────────────────────────────────────────────────────
 
@@ -817,6 +835,61 @@ def student_add_reservation():
     cur.close()
     flash('Reservation submitted! Waiting for admin approval.', 'success')
     return redirect(url_for('student_dashboard'))
+
+# ─── Student Edit Profile ──────────────────────────────────────────────────────
+
+@app.route('/student/edit-profile', methods=['GET', 'POST'])
+@student_required
+def student_edit_profile():
+    student = find_student(session['user'])
+
+    if request.method == 'POST':
+        first   = request.form.get('first_name', '').strip()
+        last    = request.form.get('last_name', '').strip()
+        middle  = request.form.get('middle_name', '').strip()
+        email   = request.form.get('email', '').strip()
+        address = request.form.get('address', '').strip()
+        new_pwd = request.form.get('new_password', '').strip()
+        confirm = request.form.get('confirm_password', '').strip()
+
+        if not first or not last:
+            flash('First name and last name are required.', 'danger')
+            return redirect(url_for('student_edit_profile'))
+
+        if new_pwd and new_pwd != confirm:
+            flash('Passwords do not match.', 'danger')
+            return redirect(url_for('student_edit_profile'))
+
+        # ── Handle photo upload (file input, not base64 hidden field) ──
+        photo_data = student.get('photo')  # keep existing photo by default
+        photo_file = request.files.get('photo')
+        if photo_file and photo_file.filename:
+            compressed = compress_photo(photo_file)
+            if compressed:
+                photo_data = compressed
+            else:
+                flash('Could not process the image. Please try a different file.', 'warning')
+
+        cur = mysql.connection.cursor()
+        if new_pwd:
+            cur.execute("""
+                UPDATE students
+                SET first=%s, last=%s, middle=%s, email=%s, address=%s, password=%s, photo=%s
+                WHERE id=%s
+            """, (first, last, middle, email, address, new_pwd, photo_data, session['user']))
+        else:
+            cur.execute("""
+                UPDATE students
+                SET first=%s, last=%s, middle=%s, email=%s, address=%s, photo=%s
+                WHERE id=%s
+            """, (first, last, middle, email, address, photo_data, session['user']))
+
+        mysql.connection.commit()
+        cur.close()
+        flash('Profile updated successfully! ✅', 'success')
+        return redirect(url_for('student_edit_profile'))
+
+    return render_template('student_edit_profile.html', student=student)
 
 # ─── Student Leaderboard ───────────────────────────────────────────────────────
 
