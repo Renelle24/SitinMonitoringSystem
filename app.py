@@ -67,7 +67,22 @@ def student_required(f):
 
 @app.route('/')
 def index():
-    return redirect(url_for('login'))
+    return redirect(url_for('public_leaderboard'))
+
+# ─── Public Leaderboard (no login required) ────────────────────────────────────
+
+@app.route('/leaderboard')
+def public_leaderboard():
+    cur = mysql.connection.cursor()
+    cur.execute("""
+        SELECT s.*,
+            (SELECT COUNT(*) FROM sitin_records WHERE student_id=s.id AND status='Done') as sitin_count
+        FROM students s
+        ORDER BY s.points DESC, sitin_count DESC
+    """)
+    leaderboard = cur.fetchall()
+    cur.close()
+    return render_template('public_leaderboard.html', leaderboard=leaderboard)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -92,7 +107,7 @@ def login():
 @app.route('/logout')
 def logout():
     session.clear()
-    return redirect(url_for('login'))
+    return redirect(url_for('public_leaderboard'))
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -289,7 +304,6 @@ def sitin_form():
 def checkout(sit_id):
     cur = mysql.connection.cursor()
     cur.execute("UPDATE sitin_records SET status = 'Done' WHERE sit_id = %s", (sit_id,))
-    # Award 1 point to student when checked out
     cur.execute("""
         UPDATE students SET points = points + 1
         WHERE id = (SELECT student_id FROM sitin_records WHERE sit_id = %s)
@@ -343,7 +357,6 @@ def sitin_reports():
     date_to   = request.args.get('date_to', '')
 
     cur = mysql.connection.cursor()
-
     query = "SELECT * FROM sitin_records WHERE 1=1"
     params = []
     if status:
@@ -422,7 +435,6 @@ def export_sitin_pdf():
     doc = SimpleDocTemplate(buffer, pagesize=landscape(letter))
     styles = getSampleStyleSheet()
     elements = []
-
     elements.append(Paragraph("CCS Sit-in Records Report", styles['Title']))
     elements.append(Paragraph(f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M')}", styles['Normal']))
     elements.append(Spacer(1, 12))
@@ -469,7 +481,6 @@ def export_students_pdf():
     doc = SimpleDocTemplate(buffer, pagesize=landscape(letter))
     styles = getSampleStyleSheet()
     elements = []
-
     elements.append(Paragraph("CCS Students List Report", styles['Title']))
     elements.append(Paragraph(f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M')}", styles['Normal']))
     elements.append(Spacer(1, 12))
@@ -503,7 +514,6 @@ def export_students_pdf():
 @admin_required
 def export_sitin_docx():
     from docx import Document
-
     cur = mysql.connection.cursor()
     cur.execute("SELECT * FROM sitin_records ORDER BY date DESC")
     records = cur.fetchall()
@@ -513,27 +523,21 @@ def export_sitin_docx():
     doc.add_heading('CCS Sit-in Records Report', 0)
     doc.add_paragraph(f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M')}")
     doc.add_paragraph("")
-
     table = doc.add_table(rows=1, cols=7)
     table.style = 'Table Grid'
     hdr = table.rows[0].cells
     for i, h in enumerate(['Sit ID','Student ID','Name','Purpose','Lab','Status','Date']):
         hdr[i].text = h
-
     for r in records:
         row = table.add_row().cells
-        row[0].text = str(r['sit_id'])
-        row[1].text = str(r['student_id'])
-        row[2].text = str(r['name'])
-        row[3].text = str(r['purpose'])
-        row[4].text = str(r['lab'])
-        row[5].text = str(r['status'])
+        row[0].text = str(r['sit_id']); row[1].text = str(r['student_id'])
+        row[2].text = str(r['name']);   row[3].text = str(r['purpose'])
+        row[4].text = str(r['lab']);    row[5].text = str(r['status'])
         row[6].text = str(r['date'])
 
     buffer = io.BytesIO()
     doc.save(buffer)
     buffer.seek(0)
-
     response = make_response(buffer.read())
     response.headers['Content-Disposition'] = 'attachment; filename=sitin_records.docx'
     response.headers['Content-Type'] = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
@@ -543,7 +547,6 @@ def export_sitin_docx():
 @admin_required
 def export_students_docx():
     from docx import Document
-
     cur = mysql.connection.cursor()
     cur.execute("SELECT * FROM students ORDER BY last")
     students = cur.fetchall()
@@ -553,28 +556,21 @@ def export_students_docx():
     doc.add_heading('CCS Students List Report', 0)
     doc.add_paragraph(f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M')}")
     doc.add_paragraph("")
-
     table = doc.add_table(rows=1, cols=8)
     table.style = 'Table Grid'
     hdr = table.rows[0].cells
     for i, h in enumerate(['ID','Last Name','First Name','Course','Year','Email','Sessions','Points']):
         hdr[i].text = h
-
     for s in students:
         row = table.add_row().cells
-        row[0].text = str(s['id'])
-        row[1].text = str(s['last'])
-        row[2].text = str(s['first'])
-        row[3].text = str(s['course'])
-        row[4].text = str(s['year'])
-        row[5].text = str(s['email'])
-        row[6].text = str(s['session'])
-        row[7].text = str(s.get('points', 0))
+        row[0].text = str(s['id']);     row[1].text = str(s['last'])
+        row[2].text = str(s['first']);  row[3].text = str(s['course'])
+        row[4].text = str(s['year']);   row[5].text = str(s['email'])
+        row[6].text = str(s['session']); row[7].text = str(s.get('points', 0))
 
     buffer = io.BytesIO()
     doc.save(buffer)
     buffer.seek(0)
-
     response = make_response(buffer.read())
     response.headers['Content-Disposition'] = 'attachment; filename=students_list.docx'
     response.headers['Content-Type'] = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
@@ -586,30 +582,23 @@ def export_students_docx():
 @admin_required
 def analytics():
     cur = mysql.connection.cursor()
-
     cur.execute("SELECT COUNT(*) as cnt FROM students")
     total_students = cur.fetchone()['cnt']
-
     cur.execute("SELECT COUNT(*) as cnt FROM sitin_records")
     total_sitin = cur.fetchone()['cnt']
-
     cur.execute("SELECT COUNT(*) as cnt FROM sitin_records WHERE status='Active'")
     active_sitin = cur.fetchone()['cnt']
-
     cur.execute("SELECT COUNT(*) as cnt FROM reservations")
     total_reservations = cur.fetchone()['cnt']
-
     cur.execute("SELECT * FROM sitin_records")
     all_records = cur.fetchall()
 
     purpose_stats = {}
     for r in all_records:
         purpose_stats[r['purpose']] = purpose_stats.get(r['purpose'], 0) + 1
-
     lab_stats = {}
     for r in all_records:
         lab_stats[r['lab']] = lab_stats.get(r['lab'], 0) + 1
-
     status_stats = {}
     for r in all_records:
         status_stats[r['status']] = status_stats.get(r['status'], 0) + 1
@@ -638,14 +627,10 @@ def analytics():
     cur.close()
 
     return render_template('analytics.html',
-        total_students=total_students,
-        total_sitin=total_sitin,
-        active_sitin=active_sitin,
-        total_reservations=total_reservations,
-        purpose_stats=purpose_stats,
-        lab_stats=lab_stats,
-        status_stats=status_stats,
-        daily_stats=daily_stats,
+        total_students=total_students, total_sitin=total_sitin,
+        active_sitin=active_sitin, total_reservations=total_reservations,
+        purpose_stats=purpose_stats, lab_stats=lab_stats,
+        status_stats=status_stats, daily_stats=daily_stats,
         top_students=top_students)
 
 # ─── Rewards routes ────────────────────────────────────────────────────────────
@@ -697,12 +682,8 @@ def lab_dashboard():
     cur.execute("SELECT * FROM sitin_records ORDER BY date DESC LIMIT 20")
     logs = cur.fetchall()
     cur.close()
-
-    return render_template('lab_dashboard.html',
-        active=active,
-        pending=pending,
-        logs=logs,
-        announcements=get_announcements())
+    return render_template('lab_dashboard.html', active=active, pending=pending,
+        logs=logs, announcements=get_announcements())
 
 @app.route('/admin/feedback')
 @admin_required
@@ -740,7 +721,6 @@ def add_reservation():
 def approve_reservation(rid):
     cur = mysql.connection.cursor()
     cur.execute("UPDATE reservations SET status='Approved' WHERE id=%s", (rid,))
-    # Award 2 points to student when reservation is approved
     cur.execute("""
         UPDATE students SET points = points + 2
         WHERE id = (SELECT student_id FROM reservations WHERE id = %s)
@@ -777,10 +757,8 @@ def delete_reservation(rid):
 def student_dashboard():
     student = find_student(session['user'])
     cur = mysql.connection.cursor()
-
     cur.execute("SELECT * FROM sitin_records WHERE student_id = %s", (session['user'],))
     my_records = cur.fetchall()
-
     cur.execute("SELECT * FROM reservations WHERE student_id = %s ORDER BY id DESC", (session['user'],))
     my_reservations = cur.fetchall()
     cur.close()
@@ -788,44 +766,24 @@ def student_dashboard():
     notifications = []
     for r in my_records:
         if r['status'] == 'Active':
-            notifications.append({
-                'type': 'approved',
-                'title': 'Sit-in Approved',
-                'message': f"Your sit-in at {r['lab']} has been approved.",
-                'date': r['date'],
-                'is_read': False
-            })
+            notifications.append({'type': 'approved', 'title': 'Sit-in Approved',
+                'message': f"Your sit-in at {r['lab']} has been approved.", 'date': r['date'], 'is_read': False})
         elif r['status'] == 'Done':
-            notifications.append({
-                'type': 'done',
-                'title': 'Sit-in Completed',
-                'message': f"Your sit-in session at {r['lab']} is done.",
-                'date': r['date'],
-                'is_read': True
-            })
+            notifications.append({'type': 'done', 'title': 'Sit-in Completed',
+                'message': f"Your sit-in session at {r['lab']} is done.", 'date': r['date'], 'is_read': True})
     for r in my_reservations:
         if r['status'] == 'Approved':
-            notifications.append({
-                'type': 'approved',
-                'title': 'Reservation Approved',
+            notifications.append({'type': 'approved', 'title': 'Reservation Approved',
                 'message': f"Your reservation for {r['lab']} on {r['date']} at {r['time']} is approved!",
-                'date': r['date'],
-                'is_read': False
-            })
+                'date': r['date'], 'is_read': False})
         elif r['status'] == 'Rejected':
-            notifications.append({
-                'type': 'rejected',
-                'title': 'Reservation Rejected',
+            notifications.append({'type': 'rejected', 'title': 'Reservation Rejected',
                 'message': f"Your reservation for {r['lab']} on {r['date']} was rejected.",
-                'date': r['date'],
-                'is_read': False
-            })
+                'date': r['date'], 'is_read': False})
 
     return render_template('student_dashboard.html',
-        student=student,
-        announcements=get_announcements(),
-        records=my_records,
-        my_reservations=my_reservations,
+        student=student, announcements=get_announcements(),
+        records=my_records, my_reservations=my_reservations,
         notifications=notifications)
 
 @app.route('/student/sitin', methods=['POST'])
@@ -836,13 +794,9 @@ def student_sitin_request():
         sit_id = next_sit_id()
         cur = mysql.connection.cursor()
         cur.execute("INSERT INTO sitin_records (sit_id, student_id, name, purpose, lab, session, status, date) VALUES (%s,%s,%s,%s,%s,%s,%s,%s)",
-            (sit_id, student['id'],
-             f"{student['first']} {student['last']}",
-             request.form.get('purpose','').strip(),
-             request.form.get('lab','').strip(),
-             student['session'],
-             'Pending',
-             datetime.now().strftime("%Y-%m-%d %H:%M")))
+            (sit_id, student['id'], f"{student['first']} {student['last']}",
+             request.form.get('purpose','').strip(), request.form.get('lab','').strip(),
+             student['session'], 'Pending', datetime.now().strftime("%Y-%m-%d %H:%M")))
         mysql.connection.commit()
         cur.close()
         flash('Sit-in request submitted! Waiting for admin approval.', 'success')
@@ -857,15 +811,39 @@ def student_add_reservation():
     name = f"{student['first']} {student['last']}"
     cur = mysql.connection.cursor()
     cur.execute("INSERT INTO reservations (student_id, name, lab, purpose, date, time, status) VALUES (%s,%s,%s,%s,%s,%s,'Pending')",
-        (student['id'], name,
-         request.form.get('lab'),
-         request.form.get('purpose'),
-         request.form.get('date'),
-         request.form.get('time')))
+        (student['id'], name, request.form.get('lab'), request.form.get('purpose'),
+         request.form.get('date'), request.form.get('time')))
     mysql.connection.commit()
     cur.close()
     flash('Reservation submitted! Waiting for admin approval.', 'success')
     return redirect(url_for('student_dashboard'))
 
+# ─── Student Leaderboard ───────────────────────────────────────────────────────
+
+@app.route('/student/leaderboard')
+@student_required
+def student_leaderboard():
+    cur = mysql.connection.cursor()
+    cur.execute("""
+        SELECT s.*,
+            (SELECT COUNT(*) FROM sitin_records WHERE student_id=s.id AND status='Done') as sitin_count
+        FROM students s
+        ORDER BY s.points DESC, sitin_count DESC
+    """)
+    leaderboard = cur.fetchall()
+    cur.close()
+
+    my_rank = None
+    for i, s in enumerate(leaderboard):
+        if s['id'] == session['user']:
+            my_rank = dict(s)
+            my_rank['rank'] = i + 1
+            break
+
+    return render_template('leaderboard.html',
+        leaderboard=leaderboard,
+        my_rank=my_rank,
+        current_user_id=session['user'])
+
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    app.run(debug=True, host='0.0.0.0', port=5000)

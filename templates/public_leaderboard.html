@@ -1,0 +1,207 @@
+{% extends "base.html" %}
+{% block title %}Leaderboard{% endblock %}
+{% block nav_brand %}College of Computer Studies Sit-in Monitoring System{% endblock %}
+
+{% block nav_links %}
+  <a href="{{ url_for('public_leaderboard') }}" class="active">🏆 Leaderboard</a>
+  <a href="{{ url_for('login') }}">🔐 Login</a>
+  <a href="{{ url_for('register') }}">📝 Register</a>
+{% endblock %}
+
+{% block extra_head %}
+<style>
+  .lb-page {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #1a237e 0%, #1565c0 50%, #0288d1 100%);
+    padding: 2rem;
+    margin: -1.5rem;
+  }
+  .lb-wrapper { max-width: 900px; margin: 0 auto; display: flex; flex-direction: column; gap: 1.5rem; }
+
+  .page-header { text-align: center; }
+  .page-header h1 { font-family: 'Rajdhani', sans-serif; font-size: 2.2rem; font-weight: 700; color: #fff; margin: 0 0 0.3rem; }
+  .page-header p  { color: rgba(255,255,255,0.75); font-size: 0.9rem; margin: 0; }
+
+  /* Podium */
+  .podium { display: flex; justify-content: center; align-items: flex-end; gap: 1rem; }
+  .podium-item { display: flex; flex-direction: column; align-items: center; gap: 0.5rem; }
+  .podium-avatar {
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-family: 'Rajdhani', sans-serif; font-weight: 800; color: white; flex-shrink: 0;
+  }
+  .podium-item.first  .podium-avatar { width: 72px; height: 72px; background: linear-gradient(135deg, #ffd700, #f5a800); color: #1a237e; font-size: 1.8rem; }
+  .podium-item.second .podium-avatar { width: 60px; height: 60px; background: linear-gradient(135deg, #c0c0c0, #a0a0a0); font-size: 1.4rem; }
+  .podium-item.third  .podium-avatar { width: 56px; height: 56px; background: linear-gradient(135deg, #cd7f32, #a0522d); font-size: 1.3rem; }
+  .podium-name { font-weight: 700; font-size: 0.85rem; color: white; text-align: center; max-width: 100px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .podium-pts  { font-family: 'Rajdhani', sans-serif; font-size: 1rem; font-weight: 800; color: #f9c600; }
+  .podium-block { border-radius: 10px 10px 0 0; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; width: 80px; }
+  .podium-item.first  .podium-block { height: 90px; background: rgba(255,215,0,0.3); border: 2px solid #ffd700; }
+  .podium-item.second .podium-block { height: 65px; background: rgba(192,192,192,0.2); border: 2px solid #c0c0c0; }
+  .podium-item.third  .podium-block { height: 50px; background: rgba(205,127,50,0.2); border: 2px solid #cd7f32; }
+
+  /* Table card */
+  .lb-card { background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 8px 24px rgba(0,0,0,0.12); }
+  html.dark .lb-card { background: var(--bg-card); }
+  .lb-card-header {
+    background: linear-gradient(135deg, #1a237e, #1565c0);
+    padding: 1rem 1.5rem; font-family: 'Rajdhani', sans-serif;
+    font-size: 1.1rem; font-weight: 700; color: white;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .lb-login-btn {
+    background: #f9c600; color: #1a237e; border: none; border-radius: 6px;
+    padding: 0.35rem 1rem; font-weight: 700; font-size: 0.82rem;
+    cursor: pointer; text-decoration: none; font-family: 'Nunito', sans-serif;
+  }
+  .lb-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+  .lb-table th {
+    background: #f0f4ff; color: #1a237e; padding: 0.75rem 1rem; text-align: left;
+    font-weight: 700; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px;
+    border-bottom: 2px solid #e0e0e0;
+  }
+  html.dark .lb-table th { background: var(--table-head-bg); color: var(--text-secondary); border-bottom-color: var(--border-color); }
+  .lb-table td { padding: 0.75rem 1rem; border-bottom: 1px solid #f0f0f0; color: #2d3a5a; vertical-align: middle; }
+  html.dark .lb-table td { border-bottom-color: var(--border-color); color: var(--text-primary); }
+  .lb-table tr:hover { background: #f5f8ff; }
+  html.dark .lb-table tr:hover { background: var(--table-row-hover); }
+  .lb-table tr:last-child td { border-bottom: none; }
+
+  .rank-badge { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 50%; font-weight: 800; font-size: 0.85rem; }
+  .rank-1 { background: #ffd700; color: #5a3e00; }
+  .rank-2 { background: #c0c0c0; color: #333; }
+  .rank-3 { background: #cd7f32; color: white; }
+  .rank-n { background: #e8eaf6; color: #1a237e; }
+  html.dark .rank-n { background: #253047; color: #93c5fd; }
+
+  .tier-badge { padding: 0.2rem 0.6rem; border-radius: 20px; font-size: 0.75rem; font-weight: 700; }
+  .tier-bronze   { background: #fff3e0; color: #e65100; }
+  .tier-silver   { background: #f5f5f5; color: #616161; }
+  .tier-gold     { background: #fff8e1; color: #f57f17; }
+  .tier-platinum { background: #e8eaf6; color: #1a237e; }
+
+  .pts-bar-wrap { display: flex; align-items: center; gap: 0.5rem; }
+  .pts-bar { flex: 1; height: 7px; background: #e8eaf6; border-radius: 4px; overflow: hidden; min-width: 60px; }
+  .pts-bar-fill { height: 100%; background: linear-gradient(90deg, #f9c600, #f5a800); border-radius: 4px; }
+  .pts-val { font-weight: 700; color: #f5a800; min-width: 40px; text-align: right; }
+
+  /* CTA banner */
+  .cta-banner {
+    background: rgba(255,255,255,0.12); backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,0.25); border-radius: 14px;
+    padding: 1.25rem 2rem; display: flex; align-items: center;
+    justify-content: space-between; gap: 1rem; flex-wrap: wrap;
+  }
+  .cta-text h3 { font-family: 'Rajdhani', sans-serif; font-size: 1.2rem; font-weight: 700; color: white; margin: 0 0 0.2rem; }
+  .cta-text p  { color: rgba(255,255,255,0.75); font-size: 0.85rem; margin: 0; }
+  .cta-buttons { display: flex; gap: 0.75rem; }
+  .btn-cta-login    { background: #f9c600; color: #1a237e; border: none; border-radius: 8px; padding: 0.6rem 1.5rem; font-weight: 700; font-size: 0.9rem; cursor: pointer; text-decoration: none; font-family: 'Rajdhani', sans-serif; }
+  .btn-cta-register { background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.4); border-radius: 8px; padding: 0.6rem 1.5rem; font-weight: 700; font-size: 0.9rem; cursor: pointer; text-decoration: none; font-family: 'Rajdhani', sans-serif; }
+
+  @media (max-width: 600px) {
+    .podium { gap: 0.5rem; }
+    .lb-page { padding: 1rem; margin: -1rem; }
+    .cta-banner { flex-direction: column; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="lb-page">
+  <div class="lb-wrapper">
+
+    <div class="page-header">
+      <h1>🏆 Student Leaderboard</h1>
+      <p>College of Computer Studies — Sit-in Monitoring System</p>
+    </div>
+
+    <!-- Top 3 Podium -->
+    {% if leaderboard|length >= 3 %}
+    <div class="podium">
+      <div class="podium-item second">
+        <div class="podium-avatar">{{ leaderboard[1].first[0] }}{{ leaderboard[1].last[0] }}</div>
+        <div class="podium-name">{{ leaderboard[1].first }} {{ leaderboard[1].last }}</div>
+        <div class="podium-pts">⭐ {{ leaderboard[1].points or 0 }}</div>
+        <div class="podium-block">🥈</div>
+      </div>
+      <div class="podium-item first">
+        <div class="podium-avatar">{{ leaderboard[0].first[0] }}{{ leaderboard[0].last[0] }}</div>
+        <div class="podium-name">{{ leaderboard[0].first }} {{ leaderboard[0].last }}</div>
+        <div class="podium-pts">⭐ {{ leaderboard[0].points or 0 }}</div>
+        <div class="podium-block">🥇</div>
+      </div>
+      <div class="podium-item third">
+        <div class="podium-avatar">{{ leaderboard[2].first[0] }}{{ leaderboard[2].last[0] }}</div>
+        <div class="podium-name">{{ leaderboard[2].first }} {{ leaderboard[2].last }}</div>
+        <div class="podium-pts">⭐ {{ leaderboard[2].points or 0 }}</div>
+        <div class="podium-block">🥉</div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Full Leaderboard -->
+    <div class="lb-card">
+      <div class="lb-card-header">
+        🏅 Full Rankings
+        <a href="{{ url_for('login') }}" class="lb-login-btn">Login to see your rank</a>
+      </div>
+      <table class="lb-table">
+        <thead>
+          <tr>
+            <th>Rank</th>
+            <th>Student</th>
+            <th>Course</th>
+            <th>Sit-ins Done</th>
+            <th>Tier</th>
+            <th>Points</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for s in leaderboard %}
+          {% set pts = s.points if s.points else 0 %}
+          {% set tier = 'Bronze' if pts < 50 else ('Silver' if pts < 100 else ('Gold' if pts < 200 else 'Platinum')) %}
+          <tr>
+            <td>
+              <span class="rank-badge {{ 'rank-1' if loop.index == 1 else ('rank-2' if loop.index == 2 else ('rank-3' if loop.index == 3 else 'rank-n')) }}">
+                {{ loop.index }}
+              </span>
+            </td>
+            <td><strong>{{ s.first }} {{ s.last }}</strong></td>
+            <td>{{ s.course }}</td>
+            <td>{{ s.sitin_count }}</td>
+            <td>
+              <span class="tier-badge tier-{{ tier|lower }}">
+                {{ '🥉' if tier == 'Bronze' else ('🥈' if tier == 'Silver' else ('🥇' if tier == 'Gold' else '💎')) }}
+                {{ tier }}
+              </span>
+            </td>
+            <td>
+              <div class="pts-bar-wrap">
+                <div class="pts-bar">
+                  <div class="pts-bar-fill" style="width: {{ [pts * 2, 100]|min }}%"></div>
+                </div>
+                <span class="pts-val">{{ pts }}</span>
+              </div>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="6" style="text-align:center;color:#999;padding:2rem;">No students yet.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- CTA Banner -->
+    <div class="cta-banner">
+      <div class="cta-text">
+        <h3>Want to see your rank?</h3>
+        <p>Login to your account to see where you stand on the leaderboard!</p>
+      </div>
+      <div class="cta-buttons">
+        <a href="{{ url_for('login') }}" class="btn-cta-login">🔐 Login</a>
+        <a href="{{ url_for('register') }}" class="btn-cta-register">📝 Register</a>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

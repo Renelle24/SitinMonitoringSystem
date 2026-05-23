@@ -1,201 +1,249 @@
 {% extends "base.html" %}
 {% block title %}Reports{% endblock %}
 {% block nav_brand %}College of Computer Studies Admin{% endblock %}
+{% block nav_logout %}<a href="{{ url_for('logout') }}" class="btn-logout">Log out</a>{% endblock %}
 {% block nav_links %}{% include "admin_nav.html" %}{% endblock %}
 
-{% block content %}
+{% block extra_head %}
 <style>
-  .reports-page { padding: 2rem; }
-  .section-title {
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 1.4rem;
-    font-weight: 700;
-    color: #1a237e;
-    margin-bottom: 1rem;
-    padding-bottom: 0.5rem;
-    border-bottom: 2px solid #e8eaf6;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
+  .reports-page {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #1a237e 0%, #1565c0 50%, #0288d1 100%);
+    padding: 2rem;
+    margin: -1.5rem;
   }
-  .export-bar {
-    display: flex;
-    gap: 0.75rem;
-    margin-bottom: 1.5rem;
-    flex-wrap: wrap;
+  html.dark .reports-page {
+    background: linear-gradient(135deg, #0a0f1e 0%, #0d1a33 50%, #0a2240 100%);
   }
-  .btn-export {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    padding: 0.55rem 1.2rem;
-    border: none;
-    border-radius: 8px;
-    font-size: 0.9rem;
-    font-weight: 600;
-    cursor: pointer;
-    text-decoration: none;
-    transition: all 0.2s;
-  }
-  .btn-csv  { background: #43a047; color: white; }
-  .btn-pdf  { background: #e53935; color: white; }
-  .btn-docx { background: #1565c0; color: white; }
-  .btn-export:hover { opacity: 0.88; transform: translateY(-1px); }
 
-  .report-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
-  .report-table th {
-    background: #e8eaf6;
-    color: #1a237e;
-    padding: 0.7rem 1rem;
-    text-align: left;
-    font-weight: 700;
-    border-bottom: 2px solid #c5cae9;
-  }
-  .report-table td { padding: 0.65rem 1rem; border-bottom: 1px solid #f0f0f0; }
-  .report-table tr:hover { background: #f5f7ff; }
+  .reports-wrapper { max-width: 1200px; margin: 0 auto; display: flex; flex-direction: column; gap: 1.5rem; }
 
-  .badge {
-    padding: 0.2rem 0.6rem;
-    border-radius: 4px;
-    font-size: 0.78rem;
-    font-weight: 600;
+  .page-header h1 {
+    font-family: 'Rajdhani', sans-serif; font-size: 2rem; font-weight: 700;
+    color: #fff; margin: 0 0 0.2rem;
   }
-  .badge-active   { background: #e8f5e9; color: #2e7d32; }
-  .badge-done     { background: #e3f2fd; color: #1565c0; }
-  .badge-pending  { background: #fff3e0; color: #e65100; }
-  .badge-rejected { background: #ffebee; color: #c62828; }
+  .page-header p { color: rgba(255,255,255,0.7); font-size: 0.875rem; margin: 0; }
 
-  .card-section {
-    background: white;
-    border-radius: 16px;
-    padding: 1.5rem;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.08);
-    margin-bottom: 2rem;
+  .report-card {
+    background: var(--bg-card);
+    border-radius: 16px; padding: 1.75rem;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+    border: 1px solid var(--border-color);
+    transition: background 0.3s, border-color 0.3s;
   }
+
+  .report-card-title {
+    font-family: 'Rajdhani', sans-serif; font-size: 1.2rem; font-weight: 700;
+    color: var(--text-primary); display: flex; align-items: center; gap: 0.5rem;
+    padding-bottom: 0.75rem; border-bottom: 2px solid var(--border-color); margin-bottom: 1.25rem;
+  }
+
+  /* Filter bar */
   .filter-bar {
-    display: flex;
-    gap: 0.75rem;
-    margin-bottom: 1rem;
-    flex-wrap: wrap;
-    align-items: center;
+    display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center; margin-bottom: 1rem;
   }
-  .filter-bar select, .filter-bar input {
-    padding: 0.45rem 0.8rem;
-    border: 1px solid #ccc;
-    border-radius: 6px;
+  .filter-bar select,
+  .filter-bar input {
+    padding: 0.5rem 0.85rem;
+    border: 1.5px solid var(--border-color);
+    border-radius: 7px; font-size: 0.875rem;
+    background: var(--bg-input); color: var(--text-primary);
+    font-family: 'Nunito', sans-serif;
+    transition: border-color 0.2s, background 0.3s;
+  }
+  .filter-bar select:focus,
+  .filter-bar input:focus { outline: none; border-color: #1565c0; }
+
+  .btn-filter {
+    padding: 0.5rem 1.2rem; background: #1a237e; color: white;
+    border: none; border-radius: 7px; cursor: pointer;
+    font-size: 0.875rem; font-weight: 700; font-family: 'Nunito', sans-serif;
+    transition: background 0.2s;
+  }
+  .btn-filter:hover { background: #0d47a1; }
+
+  /* Export buttons */
+  .export-bar { display: flex; gap: 0.75rem; margin-bottom: 1.25rem; flex-wrap: wrap; }
+  .btn-export {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    padding: 0.55rem 1.2rem; border: none; border-radius: 8px;
+    font-size: 0.875rem; font-weight: 700; cursor: pointer;
+    text-decoration: none; transition: all 0.2s; font-family: 'Nunito', sans-serif;
+  }
+  .btn-export:hover { opacity: 0.88; transform: translateY(-1px); }
+  .btn-csv  { background: #16a34a; color: white; }
+  .btn-pdf  { background: #dc2626; color: white; }
+  .btn-docx { background: #1565c0; color: white; }
+
+  /* Table */
+  .report-table-wrap { overflow-x: auto; border-radius: 10px; border: 1px solid var(--border-color); }
+
+  .report-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+
+  .report-table thead th {
+    background: #1a237e !important;
+    color: #ffffff !important;
+    padding: 0.85rem 1rem;
+    text-align: left; font-weight: 700;
+    font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;
+    border-bottom: none; white-space: nowrap;
+  }
+  html.dark .report-table thead th {
+    background: #0d1a33 !important;
+    color: #93c5fd !important;
+  }
+
+  .report-table thead th:first-child { border-radius: 9px 0 0 0; }
+  .report-table thead th:last-child  { border-radius: 0 9px 0 0; }
+
+  .report-table tbody td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--table-border);
+    color: var(--text-primary) !important;
+    background: var(--bg-card) !important;
     font-size: 0.875rem;
   }
-  .filter-bar button {
-    padding: 0.45rem 1rem;
-    background: #1a237e;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 0.875rem;
+
+  .report-table tbody tr:hover td {
+    background: var(--table-row-hover) !important;
+  }
+
+  .report-table tbody tr:last-child td { border-bottom: none; }
+
+  /* Status badges */
+  .status-badge {
+    display: inline-block; padding: 0.25rem 0.7rem;
+    border-radius: 20px; font-size: 0.75rem; font-weight: 700;
+  }
+  .status-active   { background: var(--badge-active-bg);   color: var(--badge-active-text); }
+  .status-done     { background: var(--badge-done-bg);     color: var(--badge-done-text); }
+  .status-pending  { background: var(--badge-pending-bg);  color: var(--badge-pending-text); }
+  .status-rejected { background: var(--badge-rejected-bg); color: var(--badge-rejected-text); }
+
+  .no-records {
+    text-align: center; padding: 3rem; color: var(--text-muted);
+    font-size: 0.9rem; font-style: italic;
   }
 </style>
+{% endblock %}
 
+{% block content %}
 <div class="reports-page">
+  <div class="reports-wrapper">
 
-  <!-- ── SITIN RECORDS REPORT ───────────────────── -->
-  <div class="card-section">
-    <div class="section-title">📋 Sit-in Records Report</div>
-
-    <div class="filter-bar">
-      <form method="GET" action="/admin/reports" style="display:flex; gap:0.75rem; flex-wrap:wrap; align-items:center;">
-        <select name="status">
-          <option value="">All Status</option>
-          <option value="Active"    {% if request.args.get('status')=='Active'    %}selected{% endif %}>Active</option>
-          <option value="Done"      {% if request.args.get('status')=='Done'      %}selected{% endif %}>Done</option>
-          <option value="Pending"   {% if request.args.get('status')=='Pending'   %}selected{% endif %}>Pending</option>
-          <option value="Rejected"  {% if request.args.get('status')=='Rejected'  %}selected{% endif %}>Rejected</option>
-        </select>
-        <select name="purpose">
-          <option value="">All Purpose</option>
-          <option value="C Programming">C Programming</option>
-          <option value="Java">Java</option>
-          <option value="Python">Python</option>
-          <option value="Web Development">Web Development</option>
-          <option value="Database">Database</option>
-          <option value="Other">Other</option>
-        </select>
-        <input type="date" name="date_from" value="{{ request.args.get('date_from','') }}" placeholder="From">
-        <input type="date" name="date_to"   value="{{ request.args.get('date_to','') }}"   placeholder="To">
-        <button type="submit">🔍 Filter</button>
-      </form>
+    <div class="page-header">
+      <h1>📄 Reports</h1>
+      <p>College of Computer Studies — Sit-in Monitoring System</p>
     </div>
 
-    <div class="export-bar">
-      <a class="btn-export btn-csv"  href="/admin/reports/export/sitin/csv?{{ request.query_string.decode() }}">📄 Export CSV</a>
-      <a class="btn-export btn-pdf"  href="/admin/reports/export/sitin/pdf?{{ request.query_string.decode() }}">📕 Export PDF</a>
-      <a class="btn-export btn-docx" href="/admin/reports/export/sitin/docx?{{ request.query_string.decode() }}">📘 Export DOCX</a>
+    <!-- ── SIT-IN RECORDS REPORT ── -->
+    <div class="report-card">
+      <div class="report-card-title">📋 Sit-in Records Report</div>
+
+      <div class="filter-bar">
+        <form method="GET" action="/admin/reports" style="display:flex; gap:0.75rem; flex-wrap:wrap; align-items:center;">
+          <select name="status">
+            <option value="">All Status</option>
+            <option value="Active"   {% if request.args.get('status')=='Active'   %}selected{% endif %}>Active</option>
+            <option value="Done"     {% if request.args.get('status')=='Done'     %}selected{% endif %}>Done</option>
+            <option value="Pending"  {% if request.args.get('status')=='Pending'  %}selected{% endif %}>Pending</option>
+            <option value="Rejected" {% if request.args.get('status')=='Rejected' %}selected{% endif %}>Rejected</option>
+          </select>
+          <select name="purpose">
+            <option value="">All Purpose</option>
+            <option value="C Programming">C Programming</option>
+            <option value="Java">Java</option>
+            <option value="Python">Python</option>
+            <option value="Web Development">Web Development</option>
+            <option value="Database">Database</option>
+            <option value="ASP.Net">ASP.Net</option>
+            <option value="Other">Other</option>
+          </select>
+          <input type="date" name="date_from" value="{{ request.args.get('date_from','') }}">
+          <input type="date" name="date_to"   value="{{ request.args.get('date_to','') }}">
+          <button type="submit" class="btn-filter">🔍 Filter</button>
+        </form>
+      </div>
+
+      <div class="export-bar">
+        <a class="btn-export btn-csv"  href="/admin/reports/export/sitin/csv?{{ request.query_string.decode() }}">📄 Export CSV</a>
+        <a class="btn-export btn-pdf"  href="/admin/reports/export/sitin/pdf?{{ request.query_string.decode() }}">📕 Export PDF</a>
+        <a class="btn-export btn-docx" href="/admin/reports/export/sitin/docx?{{ request.query_string.decode() }}">📘 Export DOCX</a>
+      </div>
+
+      <div class="report-table-wrap">
+        <table class="report-table">
+          <thead>
+            <tr>
+              <th>#</th><th>Sit ID</th><th>Student ID</th><th>Name</th>
+              <th>Purpose</th><th>Lab</th><th>Date</th><th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for r in sitin_records %}
+            <tr>
+              <td>{{ loop.index }}</td>
+              <td><strong>{{ r.sit_id }}</strong></td>
+              <td>{{ r.student_id }}</td>
+              <td>{{ r.name }}</td>
+              <td>{{ r.purpose }}</td>
+              <td>{{ r.lab }}</td>
+              <td>{{ r.date }}</td>
+              <td>
+                <span class="status-badge status-{{ r.status|lower }}">{{ r.status }}</span>
+              </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="8" class="no-records">No records found.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
     </div>
 
-    <table class="report-table">
-      <thead>
-        <tr>
-          <th>#</th><th>Sit ID</th><th>Student ID</th><th>Name</th>
-          <th>Purpose</th><th>Lab</th><th>Date</th><th>Status</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for r in sitin_records %}
-        <tr>
-          <td>{{ loop.index }}</td>
-          <td>{{ r.sit_id }}</td>
-          <td>{{ r.student_id }}</td>
-          <td>{{ r.name }}</td>
-          <td>{{ r.purpose }}</td>
-          <td>{{ r.lab }}</td>
-          <td>{{ r.date }}</td>
-          <td>
-            <span class="badge badge-{{ r.status|lower }}">{{ r.status }}</span>
-          </td>
-        </tr>
-        {% else %}
-        <tr><td colspan="8" style="text-align:center; color:#999; padding:2rem;">No records found.</td></tr>
-        {% endfor %}
-      </tbody>
-    </table>
+    <!-- ── STUDENTS LIST REPORT ── -->
+    <div class="report-card">
+      <div class="report-card-title">👨‍🎓 Students List Report</div>
+
+      <div class="export-bar">
+        <a class="btn-export btn-csv"  href="/admin/reports/export/students/csv">📄 Export CSV</a>
+        <a class="btn-export btn-pdf"  href="/admin/reports/export/students/pdf">📕 Export PDF</a>
+        <a class="btn-export btn-docx" href="/admin/reports/export/students/docx">📘 Export DOCX</a>
+      </div>
+
+      <div class="report-table-wrap">
+        <table class="report-table">
+          <thead>
+            <tr>
+              <th>#</th><th>ID Number</th><th>Last Name</th><th>First Name</th>
+              <th>Course</th><th>Year</th><th>Email</th><th>Sessions Left</th><th>Points</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for s in students %}
+            <tr>
+              <td>{{ loop.index }}</td>
+              <td><strong>{{ s.id }}</strong></td>
+              <td>{{ s.last }}</td>
+              <td>{{ s.first }}</td>
+              <td>{{ s.course }}</td>
+              <td>Year {{ s.year }}</td>
+              <td>{{ s.email or '—' }}</td>
+              <td>
+                <span style="background:{% if s.session <= 0 %}#fee2e2;color:#dc2626{% elif s.session <= 5 %}#fef3c7;color:#92400e{% else %}#dcfce7;color:#15803d{% endif %};padding:0.2rem 0.6rem;border-radius:20px;font-size:0.75rem;font-weight:700;">
+                  {{ s.session }}
+                </span>
+              </td>
+              <td><strong style="color:#f5a800;">⭐ {{ s.points if s.points else 0 }}</strong></td>
+            </tr>
+            {% else %}
+            <tr><td colspan="9" class="no-records">No students found.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
   </div>
-
-  <!-- ── STUDENTS LIST REPORT ───────────────────── -->
-  <div class="card-section">
-    <div class="section-title">👨‍🎓 Students List Report</div>
-
-    <div class="export-bar">
-      <a class="btn-export btn-csv"  href="/admin/reports/export/students/csv">📄 Export CSV</a>
-      <a class="btn-export btn-pdf"  href="/admin/reports/export/students/pdf">📕 Export PDF</a>
-      <a class="btn-export btn-docx" href="/admin/reports/export/students/docx">📘 Export DOCX</a>
-    </div>
-
-    <table class="report-table">
-      <thead>
-        <tr>
-          <th>#</th><th>ID Number</th><th>Last Name</th><th>First Name</th>
-          <th>Course</th><th>Year</th><th>Email</th><th>Sessions Left</th><th>Points</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for s in students %}
-        <tr>
-          <td>{{ loop.index }}</td>
-          <td>{{ s.id }}</td>
-          <td>{{ s.last }}</td>
-          <td>{{ s.first }}</td>
-          <td>{{ s.course }}</td>
-          <td>{{ s.year }}</td>
-          <td>{{ s.email }}</td>
-          <td>{{ s.session }}</td>
-          <td>⭐ {{ s.points if s.points else 0 }}</td>
-        </tr>
-        {% else %}
-        <tr><td colspan="9" style="text-align:center; color:#999; padding:2rem;">No students found.</td></tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
-
 </div>
 {% endblock %}
