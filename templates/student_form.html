@@ -19,9 +19,7 @@
     max-width: 700px;
   }
 
-  .form-header {
-    margin-bottom: 1.5rem;
-  }
+  .form-header { margin-bottom: 1.5rem; }
 
   .form-header h1 {
     font-family: 'Rajdhani', sans-serif;
@@ -44,96 +42,7 @@
     overflow: hidden;
   }
 
-  /* Profile photo section */
-  .photo-section {
-    background: linear-gradient(135deg, #1a237e, #1565c0);
-    padding: 2rem;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 1rem;
-  }
-
-  .photo-container {
-    position: relative;
-    width: 110px;
-    height: 110px;
-    cursor: pointer;
-  }
-
-  .photo-preview {
-    width: 110px;
-    height: 110px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 4px solid rgba(255,255,255,0.4);
-    background: rgba(255,255,255,0.15);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-    transition: border-color 0.2s;
-  }
-
-  .photo-preview img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: none;
-    border-radius: 50%;
-  }
-
-  .photo-placeholder {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    height: 100%;
-    color: rgba(255,255,255,0.8);
-    font-size: 2rem;
-  }
-
-  .photo-overlay {
-    position: absolute;
-    bottom: 4px;
-    right: 4px;
-    background: #f9c600;
-    border-radius: 50%;
-    width: 30px;
-    height: 30px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.85rem;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.25);
-    transition: transform 0.2s;
-  }
-
-  .photo-container:hover .photo-overlay {
-    transform: scale(1.1);
-  }
-
-  .photo-container:hover .photo-preview {
-    border-color: rgba(255,255,255,0.7);
-  }
-
-  #photoInput { display: none; }
-
-  .photo-hint {
-    color: rgba(255,255,255,0.75);
-    font-size: 0.8rem;
-    text-align: center;
-  }
-
-  .photo-hint strong {
-    color: #f9c600;
-  }
-
-  /* Form body */
-  .form-body {
-    padding: 1.75rem;
-  }
+  .form-body { padding: 1.75rem; }
 
   .section-label {
     font-family: 'Rajdhani', sans-serif;
@@ -192,7 +101,6 @@
     cursor: not-allowed;
   }
 
-  /* Buttons */
   .form-actions {
     display: flex;
     gap: 0.75rem;
@@ -256,37 +164,14 @@
 
     <div class="form-header">
       <h1>{{ '✏️ Edit Student' if student else '➕ Add Student' }}</h1>
-      <p>{{ 'Update student information and profile photo' if student else 'Fill in the details to register a new student' }}</p>
+      <p>{{ 'Update student information' if student else 'Fill in the details to register a new student' }}</p>
     </div>
 
     <div class="form-card">
-
-      <!-- Profile Photo Section -->
-      <div class="photo-section">
-        <div class="photo-container" onclick="document.getElementById('photoInput').click()">
-          <div class="photo-preview" id="photoPreview">
-            <img id="photoImg"
-              {% if student and student.get('photo') %}
-                src="{{ student.photo }}" style="display:block;"
-              {% endif %}
-              alt="Profile Photo">
-            <div class="photo-placeholder" id="photoPlaceholder"
-              {% if student and student.get('photo') %}style="display:none;"{% endif %}>
-              👤
-            </div>
-          </div>
-          <div class="photo-overlay">📷</div>
-        </div>
-        <input type="file" id="photoInput" name="photo" accept="image/*" onchange="previewPhoto(event)">
-        <div class="photo-hint">
-          Click the photo to <strong>upload a profile picture</strong><br>
-          JPG, PNG or GIF — max 2MB
-        </div>
-      </div>
-
-      <!-- Form Body -->
       <div class="form-body">
-        <form method="POST" enctype="multipart/form-data">
+
+        <!-- No enctype needed — no file upload in admin form -->
+        <form method="POST">
 
           <div class="section-label">Account Info</div>
           <div class="grid-2">
@@ -363,32 +248,11 @@
             </button>
             <a href="{{ url_for('student_list') }}" class="btn-cancel">✕ Cancel</a>
           </div>
+
         </form>
       </div>
     </div>
 
   </div>
 </div>
-
-<script>
-  function previewPhoto(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-
-    if (file.size > 2 * 1024 * 1024) {
-      alert('File is too large. Please choose an image under 2MB.');
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = function(e) {
-      const img = document.getElementById('photoImg');
-      const placeholder = document.getElementById('photoPlaceholder');
-      img.src = e.target.result;
-      img.style.display = 'block';
-      placeholder.style.display = 'none';
-    };
-    reader.readAsDataURL(file);
-  }
-</script>
 {% endblock %}

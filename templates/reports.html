@@ -38,7 +38,6 @@
     padding-bottom: 0.75rem; border-bottom: 2px solid var(--border-color); margin-bottom: 1.25rem;
   }
 
-  /* Filter bar */
   .filter-bar {
     display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center; margin-bottom: 1rem;
   }
@@ -62,7 +61,6 @@
   }
   .btn-filter:hover { background: #0d47a1; }
 
-  /* Export buttons */
   .export-bar { display: flex; gap: 0.75rem; margin-bottom: 1.25rem; flex-wrap: wrap; }
   .btn-export {
     display: inline-flex; align-items: center; gap: 0.4rem;
@@ -75,7 +73,6 @@
   .btn-pdf  { background: #dc2626; color: white; }
   .btn-docx { background: #1565c0; color: white; }
 
-  /* Table */
   .report-table-wrap { overflow-x: auto; border-radius: 10px; border: 1px solid var(--border-color); }
 
   .report-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
@@ -102,6 +99,7 @@
     color: var(--text-primary) !important;
     background: var(--bg-card) !important;
     font-size: 0.875rem;
+    vertical-align: middle;
   }
 
   .report-table tbody tr:hover td {
@@ -110,7 +108,6 @@
 
   .report-table tbody tr:last-child td { border-bottom: none; }
 
-  /* Status badges */
   .status-badge {
     display: inline-block; padding: 0.25rem 0.7rem;
     border-radius: 20px; font-size: 0.75rem; font-weight: 700;
@@ -119,6 +116,19 @@
   .status-done     { background: var(--badge-done-bg);     color: var(--badge-done-text); }
   .status-pending  { background: var(--badge-pending-bg);  color: var(--badge-pending-text); }
   .status-rejected { background: var(--badge-rejected-bg); color: var(--badge-rejected-text); }
+
+  /* Student photo in reports table */
+  .report-avatar {
+    width: 36px; height: 36px; border-radius: 50%;
+    object-fit: cover; border: 2px solid var(--border-color);
+    display: block;
+  }
+  .report-avatar-placeholder {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: var(--table-head-bg); color: var(--text-muted);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.1rem; border: 2px solid var(--border-color);
+  }
 
   .no-records {
     text-align: center; padding: 3rem; color: var(--text-muted);
@@ -215,7 +225,7 @@
         <table class="report-table">
           <thead>
             <tr>
-              <th>#</th><th>ID Number</th><th>Last Name</th><th>First Name</th>
+              <th>#</th><th>Photo</th><th>ID Number</th><th>Last Name</th><th>First Name</th>
               <th>Course</th><th>Year</th><th>Email</th><th>Sessions Left</th><th>Points</th>
             </tr>
           </thead>
@@ -223,6 +233,13 @@
             {% for s in students %}
             <tr>
               <td>{{ loop.index }}</td>
+              <td>
+                {% if s.photo %}
+                  <img src="{{ s.photo }}" class="report-avatar" alt="{{ s.first }}">
+                {% else %}
+                  <div class="report-avatar-placeholder">👤</div>
+                {% endif %}
+              </td>
               <td><strong>{{ s.id }}</strong></td>
               <td>{{ s.last }}</td>
               <td>{{ s.first }}</td>
@@ -237,7 +254,7 @@
               <td><strong style="color:#f5a800;">⭐ {{ s.points if s.points else 0 }}</strong></td>
             </tr>
             {% else %}
-            <tr><td colspan="9" class="no-records">No students found.</td></tr>
+            <tr><td colspan="10" class="no-records">No students found.</td></tr>
             {% endfor %}
           </tbody>
         </table>

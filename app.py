@@ -44,19 +44,29 @@ def next_sit_id():
     cur.close()
     return f"SIT-{(row['cnt'] + 1):04d}"
 
-def compress_photo(file_storage, max_size=(200, 200), quality=75):
+def compress_photo(file_storage, max_size=(300, 300), quality=85):
     """Compress and resize an uploaded image, return base64 data URI."""
     try:
-        img = Image.open(file_storage)
-        # Convert RGBA or palette to RGB so JPEG works
-        if img.mode in ('RGBA', 'P'):
+        file_bytes = file_storage.read()
+        if not file_bytes:
+            print("compress_photo: empty file received")
+            return None
+
+        img = Image.open(io.BytesIO(file_bytes))
+
+        if img.mode in ('RGBA', 'P', 'LA', 'L'):
             img = img.convert('RGB')
+
         img.thumbnail(max_size, Image.LANCZOS)
+
         buffer = io.BytesIO()
         img.save(buffer, format='JPEG', quality=quality, optimize=True)
         encoded = base64.b64encode(buffer.getvalue()).decode('utf-8')
+        print("compress_photo: success")
         return f"data:image/jpeg;base64,{encoded}"
+
     except Exception as e:
+        print(f"compress_photo error: {e}")
         return None
 
 # ─── Admin decorator ───────────────────────────────────────────────────────────
@@ -86,8 +96,6 @@ def student_required(f):
 @app.route('/')
 def index():
     return redirect(url_for('public_leaderboard'))
-
-# ─── Public Leaderboard (no login required) ────────────────────────────────────
 
 @app.route('/leaderboard')
 def public_leaderboard():
@@ -486,14 +494,25 @@ def export_sitin_pdf():
 @admin_required
 def export_students_pdf():
     from reportlab.lib.pagesizes import landscape, letter
-    from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+    from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image as RLImage
     from reportlab.lib import colors
     from reportlab.lib.styles import getSampleStyleSheet
+    import re
 
     cur = mysql.connection.cursor()
     cur.execute("SELECT * FROM students ORDER BY last")
     students = cur.fetchall()
     cur.close()
+
+    def get_photo_image(photo_data, size=30):
+        try:
+            if photo_data and photo_data.startswith('data:image'):
+                b64 = re.sub(r'^data:image/\w+;base64,', '', photo_data)
+                img_bytes = base64.b64decode(b64)
+                return RLImage(io.BytesIO(img_bytes), width=size, height=size)
+        except:
+            pass
+        return '—'
 
     buffer = io.BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=landscape(letter))
@@ -503,21 +522,27 @@ def export_students_pdf():
     elements.append(Paragraph(f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M')}", styles['Normal']))
     elements.append(Spacer(1, 12))
 
-    data = [['ID','Last Name','First Name','Course','Year','Email','Sessions','Points']]
+    data = [['Photo', 'ID', 'Last Name', 'First Name', 'Course', 'Year', 'Email', 'Sessions', 'Points']]
     for s in students:
-        data.append([s['id'], s['last'], s['first'], s['course'], s['year'],
-                     s['email'], s['session'], s.get('points', 0)])
+        data.append([
+            get_photo_image(s.get('photo')),
+            s['id'], s['last'], s['first'], s['course'], s['year'],
+            s['email'] or '', s['session'], s.get('points', 0)
+        ])
 
-    table = Table(data, repeatRows=1)
+    col_widths = [35, 45, 80, 80, 55, 35, 130, 55, 45]
+    table = Table(data, repeatRows=1, colWidths=col_widths)
     table.setStyle(TableStyle([
-        ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#1a237e')),
-        ('TEXTCOLOR',  (0,0), (-1,0), colors.white),
-        ('FONTNAME',   (0,0), (-1,0), 'Helvetica-Bold'),
-        ('FONTSIZE',   (0,0), (-1,0), 9),
-        ('FONTSIZE',   (0,1), (-1,-1), 8),
-        ('GRID',       (0,0), (-1,-1), 0.5, colors.HexColor('#e0e0e0')),
-        ('ROWBACKGROUNDS', (0,1), (-1,-1), [colors.white, colors.HexColor('#f5f7ff')]),
-        ('PADDING',    (0,0), (-1,-1), 5),
+        ('BACKGROUND',    (0,0), (-1,0), colors.HexColor('#1a237e')),
+        ('TEXTCOLOR',     (0,0), (-1,0), colors.white),
+        ('FONTNAME',      (0,0), (-1,0), 'Helvetica-Bold'),
+        ('FONTSIZE',      (0,0), (-1,0), 9),
+        ('FONTSIZE',      (0,1), (-1,-1), 8),
+        ('GRID',          (0,0), (-1,-1), 0.5, colors.HexColor('#e0e0e0')),
+        ('ROWBACKGROUNDS',(0,1), (-1,-1), [colors.white, colors.HexColor('#f5f7ff')]),
+        ('PADDING',       (0,0), (-1,-1), 5),
+        ('VALIGN',        (0,0), (-1,-1), 'MIDDLE'),
+        ('ALIGN',         (0,0), (0,-1), 'CENTER'),
     ]))
     elements.append(table)
     doc.build(elements)
@@ -565,6 +590,9 @@ def export_sitin_docx():
 @admin_required
 def export_students_docx():
     from docx import Document
+    from docx.shared import Inches, Pt
+    import re
+
     cur = mysql.connection.cursor()
     cur.execute("SELECT * FROM students ORDER BY last")
     students = cur.fetchall()
@@ -574,17 +602,36 @@ def export_students_docx():
     doc.add_heading('CCS Students List Report', 0)
     doc.add_paragraph(f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M')}")
     doc.add_paragraph("")
-    table = doc.add_table(rows=1, cols=8)
+
+    table = doc.add_table(rows=1, cols=9)
     table.style = 'Table Grid'
     hdr = table.rows[0].cells
-    for i, h in enumerate(['ID','Last Name','First Name','Course','Year','Email','Sessions','Points']):
+    for i, h in enumerate(['Photo', 'ID', 'Last Name', 'First Name', 'Course', 'Year', 'Email', 'Sessions', 'Points']):
         hdr[i].text = h
+
     for s in students:
         row = table.add_row().cells
-        row[0].text = str(s['id']);     row[1].text = str(s['last'])
-        row[2].text = str(s['first']);  row[3].text = str(s['course'])
-        row[4].text = str(s['year']);   row[5].text = str(s['email'])
-        row[6].text = str(s['session']); row[7].text = str(s.get('points', 0))
+        # Photo cell
+        if s.get('photo') and s['photo'].startswith('data:image'):
+            try:
+                b64 = re.sub(r'^data:image/\w+;base64,', '', s['photo'])
+                img_bytes = base64.b64decode(b64)
+                para = row[0].paragraphs[0]
+                run  = para.add_run()
+                run.add_picture(io.BytesIO(img_bytes), width=Inches(0.4))
+            except:
+                row[0].text = '—'
+        else:
+            row[0].text = '—'
+
+        row[1].text = str(s['id'])
+        row[2].text = str(s['last'])
+        row[3].text = str(s['first'])
+        row[4].text = str(s['course'])
+        row[5].text = str(s['year'])
+        row[6].text = str(s['email'] or '')
+        row[7].text = str(s['session'])
+        row[8].text = str(s.get('points', 0))
 
     buffer = io.BytesIO()
     doc.save(buffer)
@@ -684,7 +731,7 @@ def give_points():
         cur.execute("UPDATE students SET points = points + %s WHERE id = %s", (pts, sid))
         mysql.connection.commit()
         cur.close()
-        flash(f'✅ Gave {pts} point(s) to {student["first"]} {student["last"]} for: {reason}', 'success')
+        flash(f'Gave {pts} point(s) to {student["first"]} {student["last"]} for: {reason}', 'success')
     return redirect(url_for('rewards'))
 
 # ─── Lab dashboard ─────────────────────────────────────────────────────────────
@@ -860,27 +907,41 @@ def student_edit_profile():
             flash('Passwords do not match.', 'danger')
             return redirect(url_for('student_edit_profile'))
 
-        # ── Handle photo upload (file input, not base64 hidden field) ──
-        photo_data = student.get('photo')  # keep existing photo by default
+        # ── Handle photo upload ──
+        photo_data = student.get('photo')  # keep existing by default
         photo_file = request.files.get('photo')
-        if photo_file and photo_file.filename:
+        photo_captured = request.form.get('photo_captured', '').strip()
+
+        if photo_captured and photo_captured.startswith('data:image'):
+            # Camera capture — already base64, just store it directly
+            print(f"Camera photo received, length: {len(photo_captured)}")
+            photo_data = photo_captured
+
+        elif photo_file and photo_file.filename != '':
+            print(f"Photo file received: {photo_file.filename}")
             compressed = compress_photo(photo_file)
             if compressed:
                 photo_data = compressed
+                print(f"Photo saved, length: {len(photo_data)}")
             else:
                 flash('Could not process the image. Please try a different file.', 'warning')
+
+        else:
+            print("No new photo uploaded, keeping existing")
 
         cur = mysql.connection.cursor()
         if new_pwd:
             cur.execute("""
                 UPDATE students
-                SET first=%s, last=%s, middle=%s, email=%s, address=%s, password=%s, photo=%s
+                SET first=%s, last=%s, middle=%s,
+                    email=%s, address=%s, password=%s, photo=%s
                 WHERE id=%s
             """, (first, last, middle, email, address, new_pwd, photo_data, session['user']))
         else:
             cur.execute("""
                 UPDATE students
-                SET first=%s, last=%s, middle=%s, email=%s, address=%s, photo=%s
+                SET first=%s, last=%s, middle=%s,
+                    email=%s, address=%s, photo=%s
                 WHERE id=%s
             """, (first, last, middle, email, address, photo_data, session['user']))
 

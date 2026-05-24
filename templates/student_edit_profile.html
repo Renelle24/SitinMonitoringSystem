@@ -87,8 +87,6 @@
   .photo-container:hover .photo-overlay { transform: scale(1.1); }
   .photo-container:hover .photo-circle  { border-color: rgba(255,255,255,0.7); }
 
-  #photoInput { display: none; }
-
   .photo-hint { color: rgba(255,255,255,0.75); font-size: 0.8rem; text-align: center; }
   .photo-hint strong { color: #f9c600; }
 
@@ -108,7 +106,6 @@
   .section-label:first-child { margin-top: 0; }
 
   .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.85rem; }
-
   .form-group { margin-bottom: 0; }
 
   .form-label {
@@ -134,7 +131,6 @@
   }
   .form-control::placeholder { color: var(--text-muted); }
 
-  /* Flash messages inside card */
   .flash-success {
     background: var(--alert-success-bg); color: var(--alert-success-color);
     border: 1px solid var(--alert-success-border);
@@ -148,7 +144,6 @@
     font-weight: 600; font-size: 0.875rem;
   }
 
-  /* Buttons */
   .form-actions {
     display: flex; gap: 0.75rem; margin-top: 1.75rem;
     padding-top: 1.25rem; border-top: 2px solid var(--border-color);
@@ -173,6 +168,120 @@
   }
   .btn-cancel:hover { background: var(--border-color); color: var(--text-primary); }
 
+  /* ── Photo picker modal ── */
+  .modal-backdrop {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.55);
+    backdrop-filter: blur(4px);
+    z-index: 1000;
+    align-items: center; justify-content: center;
+  }
+  .modal-backdrop.open { display: flex; }
+
+  .photo-modal {
+    background: var(--bg-card);
+    border-radius: 18px;
+    box-shadow: 0 16px 48px rgba(0,0,0,0.35);
+    padding: 2rem;
+    width: 340px; max-width: 95vw;
+    display: flex; flex-direction: column; gap: 1rem;
+    animation: modalIn 0.22s ease;
+  }
+  @keyframes modalIn {
+    from { opacity: 0; transform: scale(0.92) translateY(16px); }
+    to   { opacity: 1; transform: scale(1)    translateY(0); }
+  }
+
+  .photo-modal h3 {
+    font-family: 'Rajdhani', sans-serif; font-size: 1.2rem;
+    font-weight: 700; color: var(--text-primary);
+    margin: 0; text-align: center;
+  }
+
+  .modal-options {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;
+  }
+
+  .modal-option {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 0.5rem; padding: 1.25rem 0.75rem;
+    border: 2px solid var(--border-color); border-radius: 12px;
+    cursor: pointer; transition: all 0.18s;
+    background: var(--bg-input); color: var(--text-primary);
+    font-family: 'Nunito', sans-serif; font-weight: 600;
+    font-size: 0.85rem; text-align: center;
+  }
+  .modal-option:hover {
+    border-color: #1565c0;
+    background: rgba(21,101,192,0.08);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(21,101,192,0.15);
+  }
+  .modal-option .opt-icon { font-size: 2rem; }
+
+  .modal-close {
+    background: none; border: none; cursor: pointer;
+    color: var(--text-muted); font-size: 0.85rem;
+    font-family: 'Nunito', sans-serif; margin-top: 0.25rem;
+    padding: 0.4rem; border-radius: 6px; transition: color 0.15s;
+    align-self: center;
+  }
+  .modal-close:hover { color: var(--text-primary); }
+
+  /* ── Camera modal ── */
+  .camera-modal {
+    background: var(--bg-card);
+    border-radius: 18px;
+    box-shadow: 0 16px 48px rgba(0,0,0,0.35);
+    padding: 1.5rem;
+    width: 400px; max-width: 95vw;
+    display: flex; flex-direction: column; gap: 1rem;
+    animation: modalIn 0.22s ease;
+  }
+
+  .camera-modal h3 {
+    font-family: 'Rajdhani', sans-serif; font-size: 1.2rem;
+    font-weight: 700; color: var(--text-primary);
+    margin: 0; text-align: center;
+  }
+
+  #cameraFeed, #cameraCanvas {
+    width: 100%; border-radius: 10px;
+    background: #000; display: block;
+  }
+  #cameraCanvas { display: none; }
+
+  .camera-actions {
+    display: flex; gap: 0.65rem; justify-content: center; flex-wrap: wrap;
+  }
+
+  .btn-capture {
+    background: linear-gradient(135deg, #1565c0, #0288d1);
+    color: #fff; border: none; border-radius: 8px;
+    padding: 0.6rem 1.4rem; font-weight: 700; font-size: 0.9rem;
+    cursor: pointer; font-family: 'Rajdhani', sans-serif;
+    transition: all 0.2s;
+  }
+  .btn-capture:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(21,101,192,0.35); }
+
+  .btn-retake {
+    background: var(--table-head-bg); color: var(--text-secondary);
+    border: 1.5px solid var(--border-color); border-radius: 8px;
+    padding: 0.6rem 1.2rem; font-weight: 600; font-size: 0.85rem;
+    cursor: pointer; font-family: 'Nunito', sans-serif; transition: all 0.2s;
+    display: none;
+  }
+
+  .btn-use-photo {
+    background: linear-gradient(135deg, #f9c600, #f5a800);
+    color: #1a237e; border: none; border-radius: 8px;
+    padding: 0.6rem 1.4rem; font-weight: 700; font-size: 0.9rem;
+    cursor: pointer; font-family: 'Rajdhani', sans-serif;
+    transition: all 0.2s; display: none;
+  }
+  .btn-use-photo:hover { transform: translateY(-1px); }
+
   @media (max-width: 600px) {
     .form-grid { grid-template-columns: 1fr; }
     .edit-page  { padding: 1rem; margin: -1rem; }
@@ -193,7 +302,7 @@
 
       <!-- Photo Section -->
       <div class="photo-section">
-        <div class="photo-container" onclick="document.getElementById('photoInput').click()">
+        <div class="photo-container" onclick="openPhotoModal()">
           <div class="photo-circle" id="photoCircle">
             {% if student.photo %}
               <img id="photoImg" src="{{ student.photo }}" alt="Profile Photo">
@@ -204,8 +313,7 @@
           </div>
           <div class="photo-overlay">📷</div>
         </div>
-        <input type="file" id="photoInput" accept="image/*" onchange="previewPhoto(event)">
-        <div class="photo-hint">Click to <strong>upload a profile photo</strong><br>JPG or PNG — max 2MB</div>
+        <div class="photo-hint">Click to <strong>update profile photo</strong><br>Take a photo or upload from device</div>
         <div class="student-info">
           <div class="name">{{ student.first }} {{ student.last }}</div>
           <div class="sid">ID: {{ student.id }} · {{ student.course }} Year {{ student.year }}</div>
@@ -221,52 +329,47 @@
           {% endfor %}
         {% endwith %}
 
-        <form method="POST" action="{{ url_for('student_edit_profile') }}" id="profileForm">
-          <!-- Hidden base64 photo field -->
-          <input type="hidden" name="photo_data" id="photoData" value="">
+        <form method="POST" action="{{ url_for('student_edit_profile') }}" enctype="multipart/form-data" id="profileForm">
+          <!-- Hidden file input for upload -->
+          <input type="file" id="photoFileInput" name="photo" accept="image/*" style="display:none;" onchange="handleUpload(event)">
+          <!-- Hidden input to carry camera-captured photo as base64 -->
+          <input type="hidden" id="photoCaptured" name="photo_captured">
 
           <div class="section-label">Personal Information</div>
           <div class="form-grid">
             <div class="form-group">
               <label class="form-label">First Name *</label>
-              <input type="text" name="first_name" class="form-control"
-                value="{{ student.first }}" required>
+              <input type="text" name="first_name" class="form-control" value="{{ student.first }}" required>
             </div>
             <div class="form-group">
               <label class="form-label">Last Name *</label>
-              <input type="text" name="last_name" class="form-control"
-                value="{{ student.last }}" required>
+              <input type="text" name="last_name" class="form-control" value="{{ student.last }}" required>
             </div>
           </div>
           <div class="form-group" style="margin-top:0.85rem;">
             <label class="form-label">Middle Name</label>
-            <input type="text" name="middle_name" class="form-control"
-              value="{{ student.middle or '' }}">
+            <input type="text" name="middle_name" class="form-control" value="{{ student.middle or '' }}">
           </div>
 
           <div class="section-label">Contact Information</div>
           <div class="form-group">
             <label class="form-label">Email</label>
-            <input type="email" name="email" class="form-control"
-              value="{{ student.email or '' }}" placeholder="your@email.com">
+            <input type="email" name="email" class="form-control" value="{{ student.email or '' }}" placeholder="your@email.com">
           </div>
           <div class="form-group" style="margin-top:0.85rem;">
             <label class="form-label">Address</label>
-            <input type="text" name="address" class="form-control"
-              value="{{ student.address or '' }}" placeholder="Your address">
+            <input type="text" name="address" class="form-control" value="{{ student.address or '' }}" placeholder="Your address">
           </div>
 
           <div class="section-label">Change Password</div>
           <div class="form-grid">
             <div class="form-group">
               <label class="form-label">New Password</label>
-              <input type="password" name="new_password" class="form-control"
-                placeholder="Leave blank to keep current">
+              <input type="password" name="new_password" class="form-control" placeholder="Leave blank to keep current">
             </div>
             <div class="form-group">
               <label class="form-label">Confirm Password</label>
-              <input type="password" name="confirm_password" class="form-control"
-                placeholder="Repeat new password">
+              <input type="password" name="confirm_password" class="form-control" placeholder="Repeat new password">
             </div>
           </div>
 
@@ -293,28 +396,148 @@
   </div>
 </div>
 
+<!-- ── Photo Picker Modal ── -->
+<div class="modal-backdrop" id="photoPickerModal">
+  <div class="photo-modal">
+    <h3>📷 Update Profile Photo</h3>
+    <div class="modal-options">
+      <div class="modal-option" onclick="openCamera()">
+        <span class="opt-icon">📸</span>
+        Take a Photo
+      </div>
+      <div class="modal-option" onclick="document.getElementById('photoFileInput').click(); closePhotoModal();">
+        <span class="opt-icon">🖼️</span>
+        Upload from Device
+      </div>
+    </div>
+    <button class="modal-close" onclick="closePhotoModal()">✕ Cancel</button>
+  </div>
+</div>
+
+<!-- ── Camera Modal ── -->
+<div class="modal-backdrop" id="cameraModal">
+  <div class="camera-modal">
+    <h3>📸 Take a Photo</h3>
+    <video id="cameraFeed" autoplay playsinline></video>
+    <canvas id="cameraCanvas"></canvas>
+    <div class="camera-actions">
+      <button type="button" class="btn-capture" id="btnCapture" onclick="capturePhoto()">📸 Capture</button>
+      <button type="button" class="btn-retake"  id="btnRetake"  onclick="retakePhoto()">🔄 Retake</button>
+      <button type="button" class="btn-use-photo" id="btnUsePhoto" onclick="usePhoto()">✅ Use Photo</button>
+      <button type="button" class="modal-close"   onclick="closeCamera()">✕ Cancel</button>
+    </div>
+  </div>
+</div>
+
 <script>
-  function previewPhoto(event) {
+  // ── Photo picker modal ──
+  function openPhotoModal() {
+    document.getElementById('photoPickerModal').classList.add('open');
+  }
+  function closePhotoModal() {
+    document.getElementById('photoPickerModal').classList.remove('open');
+  }
+
+  // ── Upload handler ──
+  function handleUpload(event) {
     const file = event.target.files[0];
     if (!file) return;
-
-    if (file.size > 2 * 1024 * 1024) {
-      alert('File too large! Please choose an image under 2MB.');
+    if (file.size > 5 * 1024 * 1024) {
+      alert('File too large! Please choose an image under 5MB.');
+      event.target.value = '';
       return;
     }
-
     const reader = new FileReader();
     reader.onload = function(e) {
-      const img = document.getElementById('photoImg');
-      const placeholder = document.getElementById('photoPlaceholder');
-      const dataField = document.getElementById('photoData');
-
-      img.src = e.target.result;
-      img.style.display = 'block';
-      if (placeholder) placeholder.style.display = 'none';
-      dataField.value = e.target.result; // store base64
+      setPreview(e.target.result);
     };
     reader.readAsDataURL(file);
+    // Clear captured so only uploaded file is sent
+    document.getElementById('photoCaptured').value = '';
   }
+
+  // ── Camera ──
+  let stream = null;
+
+  async function openCamera() {
+    closePhotoModal();
+    document.getElementById('cameraModal').classList.add('open');
+
+    const video    = document.getElementById('cameraFeed');
+    const canvas   = document.getElementById('cameraCanvas');
+    const btnCap   = document.getElementById('btnCapture');
+    const btnRet   = document.getElementById('btnRetake');
+    const btnUse   = document.getElementById('btnUsePhoto');
+
+    video.style.display  = 'block';
+    canvas.style.display = 'none';
+    btnCap.style.display = 'inline-flex';
+    btnRet.style.display = 'none';
+    btnUse.style.display = 'none';
+
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false });
+      video.srcObject = stream;
+    } catch (err) {
+      alert('Could not access camera: ' + err.message);
+      closeCamera();
+    }
+  }
+
+  function capturePhoto() {
+    const video  = document.getElementById('cameraFeed');
+    const canvas = document.getElementById('cameraCanvas');
+    canvas.width  = video.videoWidth;
+    canvas.height = video.videoHeight;
+    canvas.getContext('2d').drawImage(video, 0, 0);
+
+    video.style.display  = 'none';
+    canvas.style.display = 'block';
+    document.getElementById('btnCapture').style.display  = 'none';
+    document.getElementById('btnRetake').style.display   = 'inline-flex';
+    document.getElementById('btnUsePhoto').style.display = 'inline-flex';
+  }
+
+  function retakePhoto() {
+    const video  = document.getElementById('cameraFeed');
+    const canvas = document.getElementById('cameraCanvas');
+    video.style.display  = 'block';
+    canvas.style.display = 'none';
+    document.getElementById('btnCapture').style.display  = 'inline-flex';
+    document.getElementById('btnRetake').style.display   = 'none';
+    document.getElementById('btnUsePhoto').style.display = 'none';
+  }
+
+  function usePhoto() {
+    const canvas   = document.getElementById('cameraCanvas');
+    const dataUrl  = canvas.toDataURL('image/jpeg', 0.85);
+    // Put base64 in hidden field; clear file input so Flask uses this instead
+    document.getElementById('photoCaptured').value = dataUrl;
+    document.getElementById('photoFileInput').value = '';
+    setPreview(dataUrl);
+    closeCamera();
+  }
+
+  function closeCamera() {
+    if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+    document.getElementById('cameraModal').classList.remove('open');
+  }
+
+  // ── Shared preview setter ──
+  function setPreview(src) {
+    const img         = document.getElementById('photoImg');
+    const placeholder = document.getElementById('photoPlaceholder');
+    img.src           = src;
+    img.style.display = 'block';
+    if (placeholder) placeholder.style.display = 'none';
+  }
+
+  // Close modals on backdrop click
+  document.getElementById('photoPickerModal').addEventListener('click', function(e) {
+    if (e.target === this) closePhotoModal();
+  });
+  document.getElementById('cameraModal').addEventListener('click', function(e) {
+    if (e.target === this) closeCamera();
+  });
 </script>
 {% endblock %}

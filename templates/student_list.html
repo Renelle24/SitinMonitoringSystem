@@ -60,7 +60,6 @@
     flex-wrap: wrap;
   }
 
-  /* Yellow button */
   .btn-yellow {
     background: linear-gradient(135deg, #f9c600, #f5a800);
     color: #1a237e;
@@ -83,7 +82,6 @@
     box-shadow: 0 4px 12px rgba(249,198,0,0.45);
   }
 
-  /* Blue button */
   .btn-blue {
     background: linear-gradient(135deg, #1565c0, #1976d2);
     color: #ffffff;
@@ -106,7 +104,6 @@
     box-shadow: 0 4px 12px rgba(21,101,192,0.4);
   }
 
-  /* Danger/red button (kept for delete) */
   .btn-danger {
     background: linear-gradient(135deg, #e53935, #c62828);
     color: #ffffff;
@@ -129,7 +126,6 @@
     font-size: 0.8rem;
   }
 
-  /* Search bar */
   .search-group {
     display: flex;
     align-items: center;
@@ -161,7 +157,6 @@
   }
   .search-group .btn-search:hover { background: #0d47a1; }
 
-  /* Table */
   table {
     width: 100%;
     border-collapse: collapse;
@@ -217,15 +212,21 @@
     font-size: 0.8rem;
     display: inline-block;
   }
+  .session-badge.low   { background: #fff3e0; color: #e65100; }
+  .session-badge.empty { background: #ffebee; color: #c62828; }
 
-  .session-badge.low {
-    background: #fff3e0;
-    color: #e65100;
+  /* Student photo in table */
+  .student-avatar {
+    width: 40px; height: 40px; border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #dde3f8;
+    display: block;
   }
-
-  .session-badge.empty {
-    background: #ffebee;
-    color: #c62828;
+  .student-avatar-placeholder {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: #e8edf8; color: #1a237e;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.2rem; border: 2px solid #dde3f8;
   }
 
   .no-data {
@@ -258,9 +259,7 @@
     <div class="card">
       <div class="card-top">
         <div class="action-group">
-          <a href="{{ url_for('add_student') }}" class="btn-yellow">
-            ＋ Add Student
-          </a>
+          <a href="{{ url_for('add_student') }}" class="btn-yellow">＋ Add Student</a>
           <form method="POST" action="{{ url_for('reset_sessions') }}" style="margin:0;">
             <button type="submit" class="btn-blue" onclick="return confirm('Reset all sessions to 30?')">
               🔄 Reset All Sessions
@@ -280,6 +279,7 @@
       <table>
         <thead>
           <tr>
+            <th>Photo</th>
             <th>ID Number</th>
             <th>Name</th>
             <th>Year Level</th>
@@ -291,6 +291,13 @@
         <tbody>
           {% for s in students %}
           <tr>
+            <td>
+              {% if s.photo %}
+                <img src="{{ s.photo }}" class="student-avatar" alt="{{ s.first }}">
+              {% else %}
+                <div class="student-avatar-placeholder">👤</div>
+              {% endif %}
+            </td>
             <td><span class="id-badge">{{ s.id }}</span></td>
             <td><strong>{{ s.first }} {{ s.last }}</strong></td>
             <td style="text-align:center;">Year {{ s.year }}</td>
@@ -304,13 +311,14 @@
               <div style="display:flex;gap:0.4rem;flex-wrap:wrap;">
                 <a href="{{ url_for('edit_student', sid=s.id) }}" class="btn-yellow btn-sm">✏️ Edit</a>
                 <form method="POST" action="{{ url_for('delete_student', sid=s.id) }}" style="display:inline;margin:0;">
-                  <button type="submit" class="btn-danger btn-sm" onclick="return confirm('Delete {{ s.first }} {{ s.last }}?')">🗑 Delete</button>
+                  <button type="submit" class="btn-danger btn-sm"
+                    onclick="return confirm('Delete {{ s.first }} {{ s.last }}?')">🗑 Delete</button>
                 </form>
               </div>
             </td>
           </tr>
           {% else %}
-          <tr><td colspan="6" class="no-data">No students found.</td></tr>
+          <tr><td colspan="7" class="no-data">No students found.</td></tr>
           {% endfor %}
         </tbody>
       </table>
